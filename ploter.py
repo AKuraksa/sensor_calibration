@@ -1,5 +1,5 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-files = ["bile-28", "co-15", "klarka", "wifi-69"]
+files = ["klarka", "bile-28", "co-15", "wifi-69"]
 
 """
 Tento skript je určen k načítání a interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny Plotly.
@@ -14,6 +14,7 @@ Funkce:
 - Vytváří interaktivní graf, kde každá linie reprezentuje jednu sadu dat (jeden soubor).
 - Graf zahrnuje interaktivní prvky pro zobrazení hodnot v daném čase.
 - Pokud je identifikován soubor "klarka.csv", přidává kolem jeho linie toleranční rozmezí o ±0,5°C.
+- Zobrazuje průměrný časový interval mezi měřeními pro každý senzor.
 
 Použití:
 - Upravte proměnnou `files`, aby obsahovala názvy vašich souborů bez přípony.
@@ -53,25 +54,30 @@ def load_and_interpolate(file_path, reference_date=None):
         # Konverze času na pandas datetime
         time_seconds = pd.to_datetime(date + ' ' + time_str)
         
+        # Výpočet průměrného časového intervalu mezi měřeními
+        time_diffs = time_seconds.diff().dropna().dt.total_seconds()
+        average_interval = (np.mean(time_diffs) / 60) * (-1)  # Průměrný interval v minutách
+        
         # Extrakce teplotních hodnot
         temperature = data['temp']
         
         # Interpolační funkce
         interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
         
-        return time_seconds, temperature, interpolation_function, date
+        return time_seconds, temperature, interpolation_function, date, average_interval
     
     except Exception as e:
         print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
-        return None, None, None, None
+        return None, None, None, None, None
 
 def plot_data(files):
     reference_date = None
     fig = go.Figure()
-    
+    intervals = []
+
     for file in files:
         file_path = f"./data_parsed/{file}.csv"
-        time_seconds, temperature, interpolation_function, date = load_and_interpolate(file_path, reference_date)
+        time_seconds, temperature, interpolation_function, date, average_interval = load_and_interpolate(file_path, reference_date)
         
         if time_seconds is None:
             continue
@@ -82,8 +88,11 @@ def plot_data(files):
         
         # Generování plného rozsahu času v datetime pro graf
         min_time, max_time = time_seconds.min(), time_seconds.max()
-        full_time_range = pd.date_range(start=min_time, end=max_time, freq='S')
+        full_time_range = pd.date_range(start=min_time, end=max_time, freq='s')
         interpolated_temp = interpolation_function(full_time_range.astype(np.int64) / 10**9)
+        
+        # Zaokrouhlení interpolovaných teplot na 2 desetinná místa
+        interpolated_temp = np.round(interpolated_temp, 2)
         
         # Extrakce názvu souboru bez cesty a přípony
         file_name = file
@@ -92,28 +101,45 @@ def plot_data(files):
         if 'klarka' in file.lower():
             fig.add_trace(go.Scatter(
                 x=full_time_range, y=interpolated_temp, mode='lines',
-                name=f'{date} (Klárka)', line=dict(color='purple')
+                name=f'Klárka ({date})', line=dict(color='purple')
             ))
             fig.add_trace(go.Scatter(
                 x=full_time_range, y=interpolated_temp + 0.5, mode='lines',
-                name=f'{date} (+0.5°C Klárka)', line=dict(dash='dash', color='purple')
+                name=f'+0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
             ))
             fig.add_trace(go.Scatter(
                 x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
-                name=f'{date} (-0.5°C Klárka)', line=dict(dash='dash', color='purple')
+                name=f'-0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
             ))
         else:
             # Vykreslení teplotních dat
             fig.add_trace(go.Scatter(
-                x=full_time_range, y=interpolated_temp, mode='lines', name=f'{date} ({file_name})'
+                x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name} ({date})'
             ))
+        
+        # Přidání průměrného intervalu do seznamu
+        intervals.append(f'{file_name}: {average_interval:.2f} min')
     
+    # Přidání textu o průměrných intervalech do layoutu grafu
     fig.update_layout(
         title='Teplotní data',
         xaxis_title='Čas',
         yaxis_title='Teplota (°C)',
         hovermode='x unified',
-        xaxis=dict(tickformat='%Y-%m-%d %H:%M:%S')
+        xaxis=dict(tickformat='%Y-%m-%d %H:%M:%S'),
+        annotations=[
+            go.layout.Annotation(
+                text='<br>'.join(intervals),
+                align='left',
+                showarrow=False,
+                xref='paper',
+                yref='paper',
+                x=0,
+                y=0,
+                bordercolor='black',
+                borderwidth=1
+            )
+        ]
     )
     fig.show()
 
