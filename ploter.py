@@ -1,77 +1,120 @@
+# Názvy vstupních souborů (zadejte seznam názvů bez přípony)
+files = ["bile-28", "co-15", "klarka", "wifi-69"]
+
+"""
+Tento skript je určen k načítání a interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny Plotly.
+
+Funkce:
+- Načítá data ze složky `data_parsed` podle zadaného názvu souboru.
+- Zpracovává sloupec `payload`, který obsahuje data ve formátu JSON, a extrahuje potřebné informace:
+  - Hodnoty CO2, vlhkosti a teploty.
+- Pokud je záznam neplatný nebo chybí důležité informace, je odstraněn.
+- Rozděluje časový údaj do samostatných sloupců `date` (datum) a `time` (čas).
+- Interpoluje teplotní data pro každou sekundu na základě existujících měření.
+- Vytváří interaktivní graf, kde každá linie reprezentuje jednu sadu dat (jeden soubor).
+- Graf zahrnuje interaktivní prvky pro zobrazení hodnot v daném čase.
+- Pokud je identifikován soubor "klarka.csv", přidává kolem jeho linie toleranční rozmezí o ±0,5°C.
+
+Použití:
+- Upravte proměnnou `files`, aby obsahovala názvy vašich souborů bez přípony.
+- Spusťte skript pro načtení a interpolaci dat, a následné vytvoření grafu.
+
+Autor: Microsoft Copilot
+"""
+
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 from scipy.interpolate import interp1d
-import os
+import plotly.graph_objects as go
 
-# Funkce pro načtení CSV a interpolaci dat
-def load_and_interpolate(csv_file):
-    # Načteme CSV soubor
-    df = pd.read_csv(csv_file)
-    
-    # Předpokládáme, že čas je v první kolonce a teplota ve druhé
-    time = pd.to_datetime(df.iloc[:, 0])
-    temperature = df.iloc[:, 1]
-    
-    # Převedeme čas na sekundy (pro jednodušší interpolaci)
-    time_seconds = (time - time.min()).dt.total_seconds()
-
-    # Interpolace na každý druhý
-    interpolation_function = interp1d(time_seconds, temperature, kind='linear', fill_value="extrapolate")
-    new_time = np.arange(time_seconds.min(), time_seconds.max(), 1)  # Každá sekunda
-    new_temperature = interpolation_function(new_time)
-    
-    return new_time, new_temperature
-
-# Funkce pro generování grafu
-def plot_data(files):
-    fig = go.Figure()
-
-    for file in files:
-        input_file = f"./data_raw/{file}.csv"
-        time, temperature = load_and_interpolate(input_file)
+def load_and_interpolate(file_path, reference_date=None):
+    try:
+        # Načtení CSV souboru se správným oddělovačem
+        data = pd.read_csv(file_path, delimiter=',')
         
-        # Přidáme každou sadu dat jako jednu čáru na graf
-        fig.add_trace(go.Scatter(x=time, y=temperature, mode='lines', name=os.path.basename(file)))
+        # Zobrazení názvů sloupců pro ladění
+        print(f"Columns in {file_path}: {data.columns}")
+        
+        # Kontrola existence sloupců 'date' a 'temp'
+        if 'date' not in data.columns or 'temp' not in data.columns:
+            raise KeyError("'date' nebo 'temp' sloupec nebyl nalezen v datech.")
+        
+        # Konverze sloupce 'temp' na float, zpracování hodnot 'N/D' a čárky jako desetinné tečky
+        data['temp'] = data['temp'].replace('N/D', np.nan).str.replace(',', '.').astype(float)
+        
+        # Extrakce sloupců 'date' a 'time'
+        date = data['date'].iloc[0]  # Předpoklad, že všechny řádky mají stejné datum
+        time_str = data['time']
+        
+        # Porovnání referenčního data s datem aktuálního souboru, pokud je poskytováno
+        if reference_date and date != reference_date:
+            print(f"Varování: Zjištěna nesrovnalost data. Očekáváno {reference_date}, nalezeno {date}.")
+        
+        # Konverze času na pandas datetime
+        time_seconds = pd.to_datetime(date + ' ' + time_str)
+        
+        # Extrakce teplotních hodnot
+        temperature = data['temp']
+        
+        # Interpolační funkce
+        interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
+        
+        return time_seconds, temperature, interpolation_function, date
     
-    # Nastavení os a názvů
+    except Exception as e:
+        print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
+        return None, None, None, None
+
+def plot_data(files):
+    reference_date = None
+    fig = go.Figure()
+    
+    for file in files:
+        file_path = f"./data_parsed/{file}.csv"
+        time_seconds, temperature, interpolation_function, date = load_and_interpolate(file_path, reference_date)
+        
+        if time_seconds is None:
+            continue
+        
+        # Nastavení referenčního data, pokud se jedná o první soubor
+        if reference_date is None:
+            reference_date = date
+        
+        # Generování plného rozsahu času v datetime pro graf
+        min_time, max_time = time_seconds.min(), time_seconds.max()
+        full_time_range = pd.date_range(start=min_time, end=max_time, freq='S')
+        interpolated_temp = interpolation_function(full_time_range.astype(np.int64) / 10**9)
+        
+        # Extrakce názvu souboru bez cesty a přípony
+        file_name = file
+        
+        # Kontrola, zda se jedná o soubor "klarka" a přidání tolerančního rozmezí
+        if 'klarka' in file.lower():
+            fig.add_trace(go.Scatter(
+                x=full_time_range, y=interpolated_temp, mode='lines',
+                name=f'{date} (Klárka)', line=dict(color='purple')
+            ))
+            fig.add_trace(go.Scatter(
+                x=full_time_range, y=interpolated_temp + 0.5, mode='lines',
+                name=f'{date} (+0.5°C Klárka)', line=dict(dash='dash', color='purple')
+            ))
+            fig.add_trace(go.Scatter(
+                x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
+                name=f'{date} (-0.5°C Klárka)', line=dict(dash='dash', color='purple')
+            ))
+        else:
+            # Vykreslení teplotních dat
+            fig.add_trace(go.Scatter(
+                x=full_time_range, y=interpolated_temp, mode='lines', name=f'{date} ({file_name})'
+            ))
+    
     fig.update_layout(
-        title='Teploty ze senzorů',
-        xaxis_title='Čas (v sekundách)',
+        title='Teplotní data',
+        xaxis_title='Čas',
         yaxis_title='Teplota (°C)',
-        showlegend=True
+        hovermode='x unified',
+        xaxis=dict(tickformat='%Y-%m-%d %H:%M:%S')
     )
-
-    # Tlačítka pro interaktivitu
-    fig.update_xaxes(rangeslider_visible=True)  # Přidá posuvník na osu X
-    fig.update_yaxes(range=[min(temperature), max(temperature)])  # Dynamické rozmezí na ose Y
-
     fig.show()
 
-# Funkce pro kontrolu a vytvoření tolerančního pásma pro "klárka"
-def add_tolerance_for_klarka(files):
-    for file in files:
-        if 'klarka' in file.lower():
-            input_file = f"./data_raw/{file}.csv"
-            df = pd.read_csv(input_file)
-            klarka_value = df.iloc[:, 1].mean()  # Předpokládáme, že teplota je ve druhé kolonce
-            lower_bound = klarka_value - 0.5
-            upper_bound = klarka_value + 0.5
-            print(f"Soubor {file} obsahuje klárku. Toleranční rozmezí: {lower_bound} °C - {upper_bound}")
-            # Můžeme přidat k vykreslení i tento rozsah
-            fig.add_shape(
-                type="rect",
-                x0=0, x1=1,
-                y0=lower_bound, y1=upper_bound,
-                line=dict(color="RoyalBlue", width=2),
-                fillcolor="LightSkyBlue", opacity=0.3
-            )
-
-# Seznam CSV souborů pro analýzu
-files = ["bile-28", "co-15", "klarka", "wifi-69"]  # Nahraď názvy tvými soubory
-
-# Přidáme toleranci pro "klárka"
-add_tolerance_for_klarka(files)
-
-# Vykreslíme data
 plot_data(files)
