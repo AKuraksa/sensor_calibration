@@ -15,6 +15,7 @@ Funkce:
 - Graf zahrnuje interaktivní prvky pro zobrazení hodnot v daném čase.
 - Pokud je identifikován soubor "klarka.csv", přidává kolem jeho linie toleranční rozmezí o ±0,5°C.
 - Zobrazuje průměrný časový interval mezi měřeními pro každý senzor.
+- Zobrazuje stav dveří pro soubor "klarka.csv" jako jednu spojenou přímku.
 
 Použití:
 - Upravte proměnnou `files`, aby obsahovala názvy vašich souborů bez přípony.
@@ -27,6 +28,7 @@ import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
 import plotly.graph_objects as go
+
 
 def load_and_interpolate(file_path, reference_date=None):
     try:
@@ -56,7 +58,7 @@ def load_and_interpolate(file_path, reference_date=None):
         
         # Výpočet průměrného časového intervalu mezi měřeními
         time_diffs = time_seconds.diff().dropna().dt.total_seconds()
-        average_interval = (np.mean(time_diffs) / 60) * (-1)  # Průměrný interval v minutách
+        average_interval = (np.mean(time_diffs) / 60)  # Průměrný interval v minutách
         
         # Extrakce teplotních hodnot
         temperature = data['temp']
@@ -64,11 +66,11 @@ def load_and_interpolate(file_path, reference_date=None):
         # Interpolační funkce
         interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
         
-        return time_seconds, temperature, interpolation_function, date, average_interval
+        return time_seconds, temperature, interpolation_function, date, average_interval, data
     
     except Exception as e:
         print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
 def plot_data(files):
     reference_date = None
@@ -77,7 +79,7 @@ def plot_data(files):
 
     for file in files:
         file_path = f"./data_parsed/{file}.csv"
-        time_seconds, temperature, interpolation_function, date, average_interval = load_and_interpolate(file_path, reference_date)
+        time_seconds, temperature, interpolation_function, date, average_interval, data = load_and_interpolate(file_path, reference_date)
         
         if time_seconds is None:
             continue
@@ -110,6 +112,13 @@ def plot_data(files):
             fig.add_trace(go.Scatter(
                 x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
                 name=f'-0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
+            ))
+            
+            # Přidání grafové stopy pro DoorOpen
+            door_open = data["door_open"].astype(int)
+            fig.add_trace(go.Scatter(
+                x=time_seconds, y=door_open, mode='lines',
+                name='DoorOpen', line=dict(color='red', dash='dot')
             ))
         else:
             # Vykreslení teplotních dat

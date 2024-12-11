@@ -1,29 +1,8 @@
-# Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-files = ["bile-28", "co-15", "klarka", "wifi-69"]
-
-"""
-Tento skript slouží k vyčištění a zpracování surových dat ze souboru CSV. 
-
-Funkce:
-- Načítá data ze složky `data_raw` podle zadaného názvu souboru.
-- Zpracovává sloupec `payload`, který obsahuje data ve formátu JSON, a extrahuje potřebné informace:
-  - Hodnoty CO2, vlhkosti a teploty.
-- Pokud je záznam neplatný nebo chybí důležité informace, je odstraněn.
-- Rozděluje časový údaj do samostatných sloupců `date` (datum) a `time` (čas).
-- Upravená data jsou uložena do nové složky `data_parsed` se stejným názvem souboru.
-
-Statistiky:
-- Na konci zpracování skript zobrazí, kolik záznamů bylo úspěšně zpracováno a kolik bylo odstraněno.
-
-Použití:
-- Upravte proměnnou `file`, aby odpovídala názvu vašeho souboru bez složky a přípony.
-- Spusťte skript pro vyčištění a uložení dat.
-
-Autor: OpenAI ChatGPT
-"""
-
 import csv
 import json
+
+# Názvy vstupních souborů (zadejte seznam názvů bez přípony)
+files = ["bile-28", "co-15", "klarka", "wifi-69"]
 
 # Funkce pro opravu formátování JSON
 def fix_json_format(payload_str):
@@ -43,7 +22,7 @@ def replace_dot_with_comma(value):
     return value
 
 # Funkce pro určení typu souboru a extrakci dat
-def parse_payload(row):
+def parse_payload(file, row):
     try:
         payload_str = row["payload"]
         if not payload_str:
@@ -55,12 +34,22 @@ def parse_payload(row):
 
         payload = json.loads(payload_str)
 
-        # Rozpoznání formátu payloadu podle přítomných klíčů
-        if "CO2Read" in payload:
+        # Rozpoznání formátu payloadu podle přítomných klíčů pro Klárku
+        if file == "klarka" or "CO2Read" in payload:
+            co2 = replace_dot_with_comma(payload.get("CO2Read", "N/A"))
+            humidity = replace_dot_with_comma(payload.get("HumRead", "N/A"))
+            temp = replace_dot_with_comma(payload.get("Temp1Read", "N/A"))
+            door_open = payload.get("DoorOpen", "N/A")
+            
+            # Kontrola, zda obsahuje hodnoty 'N/D'
+            if "N/D" in [co2, humidity, temp]:
+                raise ValueError("Řádek obsahuje hodnotu 'N/D'.")
+            
             return {
-                "co2": replace_dot_with_comma(payload.get("CO2Read", "N/A")),
-                "humidity": replace_dot_with_comma(payload.get("HumRead", "N/A")),
-                "temp": replace_dot_with_comma(payload.get("Temp1Read", "N/A"))
+                "co2": co2,
+                "humidity": humidity,
+                "temp": temp,
+                "door_open": door_open
             }
         elif "uplink_message" in payload:
             if "decoded_payload" in payload["uplink_message"]:
@@ -98,6 +87,8 @@ for file in files:
 
         # Přidání nových sloupců do hlavičky
         fieldnames = ["id", "date", "time", "topic", "co2", "humidity", "temp"]
+        if file == "klarka":
+            fieldnames.append("door_open")
         rows = []
         deleted_count = 0
 
@@ -113,7 +104,7 @@ for file in files:
                     row["time"] = "N/A"
 
                 # Zpracování payloadu
-                parsed_data = parse_payload(row)
+                parsed_data = parse_payload(file, row)
                 if parsed_data is None:
                     deleted_count += 1
                     continue
