@@ -1,5 +1,5 @@
-# Zadej název souboru
-file = "bile-28"
+# Názvy vstupních souborů (zadejte seznam názvů bez přípony)
+files = ["bile-28", "co-15", "klarka", "wifi-69"]
 
 """
 Tento skript slouží k vyčištění a zpracování surových dat ze souboru CSV. 
@@ -24,9 +24,6 @@ Autor: OpenAI ChatGPT
 
 import csv
 import json
-
-input_file = f"./data_raw/{file}.csv"
-output_file = f"./data_parsed/{file}.csv"
 
 # Funkce pro opravu formátování JSON
 def fix_json_format(payload_str):
@@ -90,48 +87,53 @@ def parse_payload(row):
         print(f"Chyba parsování JSON: {e}\nPayload: {repr(payload_str)}")
         return None
 
-# Načtení dat ze vstupního CSV
-with open(input_file, mode="r", encoding="utf-8") as infile:
-    reader = csv.DictReader(infile)
+# Iterace přes všechny soubory
+for file in files:
+    input_file = f"./data_raw/{file}.csv"
+    output_file = f"./data_parsed/{file}.csv"
 
-    # Přidání nových sloupců do hlavičky
-    fieldnames = ["id", "date", "time", "topic", "co2", "humidity", "temp"]
-    rows = []
-    deleted_count = 0
+    # Načtení dat ze vstupního CSV
+    with open(input_file, mode="r", encoding="utf-8") as infile:
+        reader = csv.DictReader(infile)
 
-    for row in reader:
-        try:
-            time_value = row["time"]
-            if time_value:
-                date, time = time_value.split(" ")
-                row["date"] = date
-                row["time"] = time
-            else:
-                row["date"] = "N/A"
-                row["time"] = "N/A"
+        # Přidání nových sloupců do hlavičky
+        fieldnames = ["id", "date", "time", "topic", "co2", "humidity", "temp"]
+        rows = []
+        deleted_count = 0
 
-            # Zpracování payloadu
-            parsed_data = parse_payload(row)
-            if parsed_data is None:
+        for row in reader:
+            try:
+                time_value = row["time"]
+                if time_value:
+                    date, time = time_value.split(" ")
+                    row["date"] = date
+                    row["time"] = time
+                else:
+                    row["date"] = "N/A"
+                    row["time"] = "N/A"
+
+                # Zpracování payloadu
+                parsed_data = parse_payload(row)
+                if parsed_data is None:
+                    deleted_count += 1
+                    continue
+
+                row.update(parsed_data)
+            except Exception as e:
+                print(f"Obecná chyba při zpracování řádku: {e}")
                 deleted_count += 1
                 continue
 
-            row.update(parsed_data)
-        except Exception as e:
-            print(f"Obecná chyba při zpracování řádku: {e}")
-            deleted_count += 1
-            continue
+            rows.append(row)
 
-        rows.append(row)
+    # Uložení upravených dat do výstupního CSV
+    with open(output_file, mode="w", encoding="utf-8", newline="") as outfile:
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            # Odstranění klíčů, které nejsou v fieldnames
+            filtered_row = {key: row[key] for key in fieldnames if key in row}
+            writer.writerow(filtered_row)
 
-# Uložení upravených dat do výstupního CSV
-with open(output_file, mode="w", encoding="utf-8", newline="") as outfile:
-    writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-    writer.writeheader()
-    for row in rows:
-        # Odstranění klíčů, které nejsou v fieldnames
-        filtered_row = {key: row[key] for key in fieldnames if key in row}
-        writer.writerow(filtered_row)
-
-print(f"Data byla úspěšně uložena do souboru {output_file}.")
-print(f"Počet smazaných řádků: {deleted_count}.")
+    print(f"Data byla úspěšně uložena do souboru {output_file}.")
+    print(f"Počet smazaných řádků: {deleted_count}.")
