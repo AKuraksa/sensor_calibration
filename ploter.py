@@ -1,5 +1,8 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-files = ["klarka", "bile-28", "co-15", "wifi-69"]
+# files = ["nazev", "nazev", "nazev"]
+files = []
+# Body měření
+show_points = True
 
 """
 Tento skript je určen k načítání a interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny Plotly.
@@ -34,45 +37,61 @@ def load_and_interpolate(file_path, reference_date=None):
     try:
         # Načtení CSV souboru se správným oddělovačem
         data = pd.read_csv(file_path, delimiter=',')
-        
+
         # Zobrazení názvů sloupců pro ladění
         print(f"Columns in {file_path}: {data.columns}")
-        
+
         # Kontrola existence sloupců 'date' a 'temp'
         if 'date' not in data.columns or 'temp' not in data.columns:
             raise KeyError("'date' nebo 'temp' sloupec nebyl nalezen v datech.")
-        
-        # Konverze sloupce 'temp' na float, zpracování hodnot 'N/D' a čárky jako desetinné tečky
-        data['temp'] = data['temp'].replace('N/D', np.nan).str.replace(',', '.').astype(float)
-        
+
+        # Zpracování hodnot 'N/D' a čárky jako desetinné tečky, pokud jsou hodnoty řetězce
+        if data['temp'].dtype == 'object':
+            data['temp'] = data['temp'].replace('N/D', np.nan).str.replace(',', '.').astype(float)
+        else:
+            data['temp'] = data['temp'].replace('N/D', np.nan).astype(float)
+
         # Extrakce sloupců 'date' a 'time'
         date = data['date'].iloc[0]  # Předpoklad, že všechny řádky mají stejné datum
         time_str = data['time']
-        
+
         # Porovnání referenčního data s datem aktuálního souboru, pokud je poskytováno
         if reference_date and date != reference_date:
-            print(f"Varování: Zjištěna nesrovnalost data. Očekáváno {reference_date}, nalezeno {date}.")
-        
-        # Konverze času na pandas datetime
-        time_seconds = pd.to_datetime(date + ' ' + time_str)
-        
-        # Výpočet průměrného časového intervalu mezi měřeními
+            proceed = input(f"Varování: Zjištěna nesrovnalost data. Očekáváno {reference_date}, nalezeno {date}. Pokračovat? (ano/a/yes/y): ")
+            if proceed.lower() not in ['ano', 'a', 'yes', 'y']:
+                print("Skript ukončen.")
+                return None, None, None, None, None, None
+
+        # Konverze času na pandas datetime bez data
+        time_seconds = pd.to_datetime(time_str, format='%H:%M:%S')
+
+        # Debug: Výpis skutečných časových údajů
+        # print("Actual time values:", time_seconds.tolist())
+
         time_diffs = time_seconds.diff().dropna().dt.total_seconds()
-        average_interval = (np.mean(time_diffs) / 60)  # Průměrný interval v minutách
-        
+
+        # Debug: Zobrazení rozdílů časů
+        # print("Time differences (in seconds):", time_diffs.tolist())
+
+        # Výpočet průměrného časového intervalu mezi měřeními
+        average_interval = np.mean(time_diffs)  # Průměrný interval v sekundách
+
+        # Debug: Zobrazení průměrného intervalu
+        # print(f"Average interval (in seconds) for {file_path}: {average_interval}")
+
         # Extrakce teplotních hodnot
         temperature = data['temp']
-        
+
         # Interpolační funkce
         interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
-        
-        return time_seconds, temperature, interpolation_function, date, average_interval, data
-    
+
+        return time_seconds.dt.time, temperature, interpolation_function, date, average_interval, data
+
     except Exception as e:
         print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
         return None, None, None, None, None, None
 
-def plot_data(files):
+def plot_data(files, show_points=True):
     reference_date = None
     fig = go.Figure()
     intervals = []
@@ -88,13 +107,15 @@ def plot_data(files):
         if reference_date is None:
             reference_date = date
         
-        # Generování plného rozsahu času v datetime pro graf
-        min_time, max_time = time_seconds.min(), time_seconds.max()
-        full_time_range = pd.date_range(start=min_time, end=max_time, freq='s')
-        interpolated_temp = interpolation_function(full_time_range.astype(np.int64) / 10**9)
-        
-        # Zaokrouhlení interpolovaných teplot na 2 desetinná místa
-        interpolated_temp = np.round(interpolated_temp, 2)
+        # Generování plného rozsahu času v datetime pro graf (bez data)
+        min_time, max_time = pd.to_datetime(time_seconds, format='%H:%M:%S').min(), pd.to_datetime(time_seconds, format='%H:%M:%S').max()
+        full_time_range = pd.date_range(start=f"2000-01-01 {min_time}", end=f"2000-01-01 {max_time}", freq='s').time
+
+        # Seřazení full_time_range
+        full_time_range = sorted(full_time_range)
+
+        # Pokračování s interpolací
+        interpolated_temp = interpolation_function(pd.to_datetime(full_time_range, format='%H:%M:%S').astype(np.int64) / 10**9)
         
         # Extrakce názvu souboru bez cesty a přípony
         file_name = file
@@ -113,9 +134,19 @@ def plot_data(files):
                 x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
                 name=f'-0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
             ))
-            
-            # Přidání grafové stopy pro DoorOpen
-            door_open = data["door_open"].astype(int)
+
+            # Přidání bodů pro skutečná měření, pokud je show_points True
+            if show_points:
+                fig.add_trace(go.Scatter(
+                    x=time_seconds, y=temperature, mode='markers', name=f'Měření ({date})',
+                    marker=dict(color='red', size=8, symbol='circle')
+                ))
+
+            # Přidání grafové stopy pro DoorOpen, pokud sloupec existuje
+            if 'door_open' in data.columns:
+                door_open = data["door_open"].astype(int)
+            else:
+                door_open = -1 * np.ones(len(time_seconds))
             fig.add_trace(go.Scatter(
                 x=time_seconds, y=door_open, mode='lines',
                 name='DoorOpen', line=dict(color='red', dash='dot')
@@ -125,9 +156,16 @@ def plot_data(files):
             fig.add_trace(go.Scatter(
                 x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name} ({date})'
             ))
-        
+            
+            # Přidání bodů pro skutečná měření, pokud je show_points True
+            if show_points:
+                fig.add_trace(go.Scatter(
+                    x=time_seconds, y=temperature, mode='markers', name=f'Měření ({date})',
+                    marker=dict(color='red', size=8, symbol='circle')
+                ))
+
         # Přidání průměrného intervalu do seznamu
-        intervals.append(f'{file_name}: {average_interval:.2f} min')
+        intervals.append(f'{file_name}: {average_interval:.2f} sec')
     
     # Přidání textu o průměrných intervalech do layoutu grafu
     fig.update_layout(
@@ -135,7 +173,7 @@ def plot_data(files):
         xaxis_title='Čas',
         yaxis_title='Teplota (°C)',
         hovermode='x unified',
-        xaxis=dict(tickformat='%Y-%m-%d %H:%M:%S'),
+        xaxis=dict(tickformat='%H:%M:%S'),
         annotations=[
             go.layout.Annotation(
                 text='<br>'.join(intervals),
@@ -152,4 +190,5 @@ def plot_data(files):
     )
     fig.show()
 
-plot_data(files)
+# Příklad volání funkce s bool parametrem
+plot_data(files, show_points)
