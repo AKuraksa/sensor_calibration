@@ -1,5 +1,6 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
 files = ["bile-28", "co-15", "klarka", "wifi-69"]
+folder = "2024-12-10"
 
 """
 Tento skript slouží k vyčištění a zpracování surových dat ze souboru CSV. 
@@ -99,7 +100,7 @@ def parse_payload(file, row):
 
 # Iterace přes všechny soubory
 for file in files:
-    input_file = f"./data_raw/{file}.csv"
+    input_file = f"./data_raw/{folder}/{file}.csv"
     output_file = f"./data_parsed/{file}.csv"
 
     # Načtení dat ze vstupního CSV

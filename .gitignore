@@ -1,6 +1,5 @@
 venv/
 data_parsed/*.csv
-data_raw/*.csv
 
 # Standart
 # Byte-compiled / optimized / DLL files
