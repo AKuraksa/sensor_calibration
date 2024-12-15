@@ -1,6 +1,6 @@
 # Cesty k souborům
-sensor_1 = "co-15"
-sensor_2 = "klarka"
+sensor_1 = "zkouska"
+sensor_2 = "zkouska"
 
 # Celkový časový rozsah (volitelné)
 # global_time_range = ("17:50:00", "19:15:00")
