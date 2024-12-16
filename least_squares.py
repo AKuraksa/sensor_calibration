@@ -1,10 +1,10 @@
 # Cesty k souborům
-sensor_1 = "zkouska"
-sensor_2 = "zkouska"
+sensor_1 = "klarka"
+sensor_2 = "co-15"
 
 # Celkový časový rozsah (volitelné)
 # global_time_range = ("17:50:00", "19:15:00")
-global_time_range = ()
+global_time_range = ("17:50:00", "19:15:00")
 
 # Intervaly pro zvýraznění (volitelné)
 # highlight_intervals = [ ("18:00:00", "18:05:00"), ("18:15:00", "18:20:00"), ("18:40:00", "19:00:00") ]

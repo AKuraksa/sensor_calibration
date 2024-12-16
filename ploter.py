@@ -1,6 +1,6 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
 # files = ["nazev", "nazev", "nazev"]
-files = []
+files = ["co-15", "klarka", "bile-28"]
 # Body měření
 show_points = True
 
