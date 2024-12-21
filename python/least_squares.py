@@ -176,7 +176,7 @@ def plot_calibrated_data(sensor_1, sensor_2, global_time_range=None, highlight_i
 
         print("Plot ready to be shown.")
 
-        fig.show()
+        return fig
     except Exception as e:
         print(f"Chyba při vytváření grafu: {e}")
 

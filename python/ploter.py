@@ -1,6 +1,6 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
 # files = ["nazev", "nazev", "nazev"]
-files = ["co-15", "klarka", "bile-28"]
+files = ["co_15", "klarka"]
 # Body měření
 show_points = True
 
@@ -188,7 +188,7 @@ def plot_data(files, show_points=True):
             )
         ]
     )
-    fig.show()
+    return fig
 
 # Příklad volání funkce s bool parametrem
 plot_data(files, show_points)
