@@ -33,12 +33,12 @@ Na Windows: venv\Scripts\activate   #Na Linux: source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Popis programů
+## Moduly
 
-### parser.py
+### modules\parser.py
 
 Tento skript slouží k vyčištění a zpracování surových dat ze souboru CSV.
 
-### ploter.py
+### modules\ploter.py
 
 Tento skript je určen k načítání a interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny Plotly.
