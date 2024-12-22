@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
-from modules.ploter import plot_figure, validate_files
+from modules.ploter import plot_figure
+from modules.tools import validate_files
 import os
 
 app = Flask(__name__)
