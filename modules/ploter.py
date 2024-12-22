@@ -4,29 +4,6 @@ files = ["co_15", "klarka"]
 # Body měření
 show_points = True
 
-"""
-Tento skript je určen k načítání a interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny Plotly.
-
-Funkce:
-- Načítá data ze složky `data_parsed` podle zadaného názvu souboru.
-- Zpracovává sloupec `payload`, který obsahuje data ve formátu JSON, a extrahuje potřebné informace:
-  - Hodnoty CO2, vlhkosti a teploty.
-- Pokud je záznam neplatný nebo chybí důležité informace, je odstraněn.
-- Rozděluje časový údaj do samostatných sloupců `date` (datum) a `time` (čas).
-- Interpoluje teplotní data pro každou sekundu na základě existujících měření.
-- Vytváří interaktivní graf, kde každá linie reprezentuje jednu sadu dat (jeden soubor).
-- Graf zahrnuje interaktivní prvky pro zobrazení hodnot v daném čase.
-- Pokud je identifikován soubor "klarka.csv", přidává kolem jeho linie toleranční rozmezí o ±0,5°C.
-- Zobrazuje průměrný časový interval mezi měřeními pro každý senzor.
-- Zobrazuje stav dveří pro soubor "klarka.csv" jako jednu spojenou přímku.
-
-Použití:
-- Upravte proměnnou `files`, aby obsahovala názvy vašich souborů bez přípony.
-- Spusťte skript pro načtení a interpolaci dat, a následné vytvoření grafu.
-
-Autor: Microsoft Copilot
-"""
-
 import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
@@ -43,7 +20,7 @@ def load_and_interpolate(file_path, reference_date=None):
 
         # Kontrola existence sloupců 'date' a 'temp'
         if 'date' not in data.columns or 'temp' not in data.columns:
-            raise KeyError("'date' nebo 'temp' sloupec nebyl nalezen v datech.")
+            raise KeyError("'date' or 'temp' column wasnt found")
 
         # Zpracování hodnot 'N/D' a čárky jako desetinné tečky, pokud jsou hodnoty řetězce
         if data['temp'].dtype == 'object':
@@ -60,7 +37,7 @@ def load_and_interpolate(file_path, reference_date=None):
             proceed = input(f"Varování: Zjištěna nesrovnalost data. Očekáváno {reference_date}, nalezeno {date}. Pokračovat? (ano/a/yes/y): ")
             if proceed.lower() not in ['ano', 'a', 'yes', 'y']:
                 print("Skript ukončen.")
-                return None, None, None, None, None, None
+                return None, None, None, None, None
 
         # Konverze času na pandas datetime bez data
         time_seconds = pd.to_datetime(time_str, format='%H:%M:%S')
@@ -68,37 +45,25 @@ def load_and_interpolate(file_path, reference_date=None):
         # Debug: Výpis skutečných časových údajů
         # print("Actual time values:", time_seconds.tolist())
 
-        time_diffs = time_seconds.diff().dropna().dt.total_seconds()
-
-        # Debug: Zobrazení rozdílů časů
-        # print("Time differences (in seconds):", time_diffs.tolist())
-
-        # Výpočet průměrného časového intervalu mezi měřeními
-        average_interval = np.mean(time_diffs)  # Průměrný interval v sekundách
-
-        # Debug: Zobrazení průměrného intervalu
-        # print(f"Average interval (in seconds) for {file_path}: {average_interval}")
-
         # Extrakce teplotních hodnot
         temperature = data['temp']
 
         # Interpolační funkce
         interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
 
-        return time_seconds.dt.time, temperature, interpolation_function, date, average_interval, data
+        return time_seconds.dt.time, temperature, interpolation_function, date, data
 
     except Exception as e:
         print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
-        return None, None, None, None, None, None
+        return None, None, None, None, None
 
-def plot_data(files, show_points=True):
+def plot_data(files, show_points=False):
     reference_date = None
     fig = go.Figure()
-    intervals = []
 
     for file in files:
         file_path = f"./data_parsed/{file}.csv"
-        time_seconds, temperature, interpolation_function, date, average_interval, data = load_and_interpolate(file_path, reference_date)
+        time_seconds, temperature, interpolation_function, date, data = load_and_interpolate(file_path, reference_date)
         
         if time_seconds is None:
             continue
@@ -163,9 +128,6 @@ def plot_data(files, show_points=True):
                     x=time_seconds, y=temperature, mode='markers', name=f'Měření ({date})',
                     marker=dict(color='red', size=8, symbol='circle')
                 ))
-
-        # Přidání průměrného intervalu do seznamu
-        intervals.append(f'{file_name}: {average_interval:.2f} sec')
     
     # Přidání textu o průměrných intervalech do layoutu grafu
     fig.update_layout(
@@ -174,21 +136,15 @@ def plot_data(files, show_points=True):
         yaxis_title='Teplota (°C)',
         hovermode='x unified',
         xaxis=dict(tickformat='%H:%M:%S'),
-        annotations=[
-            go.layout.Annotation(
-                text='<br>'.join(intervals),
-                align='left',
-                showarrow=False,
-                xref='paper',
-                yref='paper',
-                x=0,
-                y=0,
-                bordercolor='black',
-                borderwidth=1
-            )
-        ]
     )
-    return fig
+    if __name__ == "__main__":
+        fig.show()
+    else:
+        return fig
 
-# Příklad volání funkce s bool parametrem
-plot_data(files, show_points)
+def main():
+    # Hlavní logika pro testování
+    plot_data(files, show_points)
+
+if __name__ == "__main__":
+    main()

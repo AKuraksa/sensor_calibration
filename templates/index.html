@@ -3,61 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plotly Grafy</title>
+    <title>Vizualizace dat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <h1>Generování grafů</h1>
-
-    <form method="POST">
-        <label for="graph_type">Vyberte typ grafu:</label>
-        <select id="graph_type" name="graph_type">
-            <option value="temperature">Teplotní data</option>
-            <option value="calibration">Kalibrace senzorů</option>
-        </select>
-        <br><br>
-
-        <!-- Formulář pro teplotní data -->
-        <div id="temperature_form" class="form_section">
-            <label for="files">Seznam souborů (oddělené čárkami):</label>
-            <input type="text" id="files" name="files" required>
-            <br><br>
+    <div class="container">
+        <div class="sidebar">
+            <h2>Vyberte soubory:</h2>
+            <form id="file-form">
+                {% for file in files %}
+                <label>
+                    <input type="checkbox" name="files" value="{{ file }}">
+                    {{ file }}
+                </label><br>
+                {% endfor %}
+                <button type="button" id="submit-button">Generovat grafy</button>
+            </form>
         </div>
-
-        <!-- Formulář pro kalibraci senzorů -->
-        <div id="calibration_form" class="form_section" style="display:none;">
-            <label for="sensor_1">Senzor 1:</label>
-            <input type="text" id="sensor_1" name="sensor_1" required>
-            <br>
-            <label for="sensor_2">Senzor 2:</label>
-            <input type="text" id="sensor_2" name="sensor_2" required>
-            <br>
-            <label for="time_range">Časový rozsah (start_time,end_time):</label>
-            <input type="text" id="time_range" name="time_range">
-            <br>
-            <label for="highlight_intervals">Zvýrazněné intervaly (start_time,end_time; start_time,end_time):</label>
-            <input type="text" id="highlight_intervals" name="highlight_intervals">
-            <br><br>
+        <div class="content">
+            <div id="graph1">
+                <h3>Graf 1</h3>
+                <!-- První graf -->
+            </div>
+            <div id="graph2">
+                <h3>Graf 2</h3>
+                <!-- Druhý graf -->
+            </div>
         </div>
-
-        <button type="submit">Generovat graf</button>
-    </form>
-
-    <h2>Výsledný graf:</h2>
-    {% if graph %}
-        {{ graph|safe }}
-    {% endif %}
-
-    <script>
-        // Zobrazení příslušného formuláře podle výběru
-        document.getElementById("graph_type").addEventListener("change", function() {
-            if (this.value == "calibration") {
-                document.getElementById("temperature_form").style.display = "none";
-                document.getElementById("calibration_form").style.display = "block";
-            } else {
-                document.getElementById("temperature_form").style.display = "block";
-                document.getElementById("calibration_form").style.display = "none";
-            }
-        });
-    </script>
+    </div>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>
