@@ -31,7 +31,6 @@ def load_file(file_path):
     # print(f"Processed data from {file_path}:\n{data.head()}")
     return data
 
-
 def interpolate_data(data):
     """
     Create an interpolation function for temperature data.
@@ -50,7 +49,6 @@ def interpolate_data(data):
     return interp1d(
         time_seconds, temp, kind='linear', fill_value="extrapolate"
     )
-
 
 def calculate_global_min_time(files):
     """
@@ -73,23 +71,23 @@ def calculate_global_min_time(files):
     # print(f"Global minimum time: {min_time}")
     return min_time
 
-
 def plot_figure(files, ref_file=None, show_points=False):
     """
     Plot temperature data with optional reference file.
 
     Parameters:
-        files (list): List of file paths.
+        files (list): List of file names without extensions.
         ref_file (str): Reference file name (without extension).
         show_points (bool): Whether to display actual data points on the graph.
 
     Returns:
         None
     """
+    file_paths = validate_files(files)
     fig = go.Figure()
-    global_min_time = calculate_global_min_time(files)
+    global_min_time = calculate_global_min_time(file_paths)
 
-    for file_path in files:
+    for file_path in file_paths:
         try:
             # Load and process file
             data = load_file(file_path)
@@ -160,7 +158,6 @@ def plot_figure(files, ref_file=None, show_points=False):
     )
     return fig
 
-
 def main():
     """
     Main function to execute the script.
@@ -179,14 +176,8 @@ def main():
         else:
             ref_file = None 
 
-    try:
-        # Validate files and plot data
-        file_paths = validate_files(files)
-        fig = plot_figure(file_paths, ref_file=ref_file, show_points=show_points)
-        fig.show()
-    except Exception as e:
-        print(f"Error: {e}")
-
+    fig = plot_figure(files, ref_file=ref_file, show_points=show_points)
+    fig.show()
 
 if __name__ == "__main__":
     from tools import validate_files

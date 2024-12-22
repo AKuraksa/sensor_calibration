@@ -27,8 +27,6 @@ Autor: OpenAI ChatGPT
 
 Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny **Plotly**. Program umožňuje porovnání dat ze senzorů a zahrnuje specifickou podporu pro referenční senzor, u kterého se zobrazí tolerance ±0,5°C.
 
----
-
 ### Funkce programu
 
 1. **Načítání dat ze souborů CSV**
@@ -65,8 +63,6 @@ Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytv�
      - Teplotními hodnotami.
      - Volitelně bodovými měřeními pro vizuální kontrolu.
 
----
-
 ### Jak program pracuje se souborem
 
 1. **Načtení souboru:** Program otevře CSV soubor ze složky `data_parsed` podle zadaného názvu.
@@ -92,8 +88,6 @@ Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytv�
 
    - Program zobrazí výsledný graf s možností interakce (např. zobrazení konkrétních hodnot).
 
----
-
 ### Použití programu
 
 1. Připravte soubory CSV ve složce `data_parsed`. Každý soubor by měl obsahovat alespoň sloupce `time` a `temp`.
@@ -102,11 +96,41 @@ Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytv�
 4. Zadejte referenční soubor (pokud existuje).
 5. Program vykreslí interaktivní graf, který můžete analyzovat.
 
----
-
 ### Autorství
 
 Tento skript byl vytvořen a upraven jako uživatelský nástroj s přispěním asistenta OpenAI a Microsoft Copilot.
+
+---
+
+## least_squares.py
+
+Tento skript je určen k načítání a zpracování dat ze souborů CSV, jejich průměrování po časových blocích a vytvoření scatter plotu pro kalibraci teplotních senzorů pomocí knihovny Plotly.
+
+### Funkce:
+
+- Načítá data ze složky `data_parsed` podle zadaného názvu souboru.
+- Zpracovává data:
+
+  - Načítá CSV soubor, převádí data do správného formátu a vrací DataFrame se sloupci 'time', 'temp', a 'date'.
+  - Rozděluje data do časových bloků podle zadané frekvence a vrací průměry.
+  - Sloučí data ze dvou senzorů na základě blízkého času.
+- Vytváří scatter plot:
+
+  - Hodnoty ze senzoru 1 jsou na ose x a hodnoty ze senzoru 2 na ose y.
+  - Zvýrazňuje body v zadaných intervalech, pokud jsou definovány.
+  - Přidává osu x = y jako referenční linii.
+  - Nastavuje graf tak, aby rozsah osy x byl stejný jako rozsah osy y.
+
+### Použití:
+
+- Upravte proměnné `sensor_1_file` a `sensor_2_file`, aby obsahovaly názvy vašich souborů bez přípony.
+- Pokud je to potřebné, upravte proměnnou `global_time_range` pro omezení celkového časového rozsahu.
+- Pokud je to potřebné, upravte seznam `highlight_intervals` pro zvýraznění bodů v zadaných intervalech.
+- Spusťte skript pro načtení, zpracování a průměrování dat, a následné vytvoření scatter plotu pro kalibraci teplotních senzorů.
+
+### Autor:
+
+Microsoft Copilot
 
 ## tools.py
 

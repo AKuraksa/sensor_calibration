@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request
 from modules.ploter import plot_figure
 from modules.avg_senzor_time import process_files
-from modules.tools import validate_files
 
 app = Flask(__name__)
 
@@ -27,8 +26,7 @@ def progress_graph():
 
         # Generování grafu pomocí funkce z modulu ploter
         try:
-            file_paths = validate_files(files)
-            fig = plot_figure(file_paths, ref_file, show_points)
+            fig = plot_figure(files, ref_file, show_points)
             fig_html = fig.to_html(full_html=False)
         except Exception as e:
             return render_template('progress_graph.html', error=str(e))
