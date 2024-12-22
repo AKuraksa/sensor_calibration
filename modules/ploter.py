@@ -1,135 +1,176 @@
-# Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-# files = ["nazev", "nazev", "nazev"]
-files = ["co_15", "klarka"]
-# Body měření
-show_points = True
-
 import pandas as pd
 import numpy as np
 from scipy.interpolate import interp1d
 import plotly.graph_objects as go
+import os
 
 
-def load_and_interpolate(file_path, reference_date=None):
-    try:
-        # Načtení CSV souboru se správným oddělovačem
+def validate_files(files):
+    """
+    Validate if files exist and return their full paths.
+
+    Parameters:
+        files (list): List of file names without extensions.
+
+    Returns:
+        list: List of valid file paths.
+    """
+    paths = [f"./data_parsed/{file.strip()}.csv" for file in files]
+    for path in paths:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Soubor {path} neexistuje.")
+    # Debug: Print validated file paths
+    # print(f"Validated file paths: {paths}")
+    return paths
+
+
+def load_file(file_path):
+    """
+    Load and process a CSV file.
+
+    Parameters:
+        file_path (str): Path to the CSV file.
+
+    Returns:
+        pd.DataFrame: Processed data.
+    """
+    data = pd.read_csv(file_path, delimiter=',')
+    if 'date' not in data.columns or 'temp' not in data.columns or 'time' not in data.columns:
+        raise KeyError(f"Soubor {file_path} neobsahuje požadované sloupce.")
+
+    # Handle missing data and decimal separators
+    if data['temp'].dtype == object:  # Check if 'temp' contains strings
+        data['temp'] = data['temp'].replace('N/D', np.nan).str.replace(',', '.').astype(float)
+    else:
+        data['temp'] = data['temp'].replace('N/D', np.nan)  # No .str.replace() needed
+
+    # Convert 'time' to datetime
+    data['time'] = pd.to_datetime(data['time'], format='%H:%M:%S')
+
+    # Debug: Print first few rows of the processed data
+    # print(f"Processed data from {file_path}:\n{data.head()}")
+    return data
+
+
+def interpolate_data(data):
+    """
+    Create an interpolation function for temperature data.
+
+    Parameters:
+        data (pd.DataFrame): Data with 'time' and 'temp' columns.
+
+    Returns:
+        interp1d: Interpolation function.
+    """
+    time_seconds = data['time'].astype(np.int64) // 10**9
+    temp = data['temp']
+
+    # Debug: Print interpolation input ranges
+    # print(f"Interpolation input time range: {time_seconds.min()} - {time_seconds.max()}")
+    return interp1d(
+        time_seconds, temp, kind='linear', fill_value="extrapolate"
+    )
+
+
+def calculate_global_min_time(files):
+    """
+    Calculate the earliest time across all files.
+
+    Parameters:
+        files (list): List of file paths.
+
+    Returns:
+        pd.Timestamp: Earliest time found in the files.
+    """
+    min_time = None
+    for file_path in files:
         data = pd.read_csv(file_path, delimiter=',')
+        file_min_time = pd.to_datetime(data['time'], format='%H:%M:%S').min()
+        if min_time is None or file_min_time < min_time:
+            min_time = file_min_time
 
-        # Zobrazení názvů sloupců pro ladění
-        print(f"Columns in {file_path}: {data.columns}")
+    # Debug: Print global minimum time
+    # print(f"Global minimum time: {min_time}")
+    return min_time
 
-        # Kontrola existence sloupců 'date' a 'temp'
-        if 'date' not in data.columns or 'temp' not in data.columns:
-            raise KeyError("'date' or 'temp' column wasnt found")
 
-        # Zpracování hodnot 'N/D' a čárky jako desetinné tečky, pokud jsou hodnoty řetězce
-        if data['temp'].dtype == 'object':
-            data['temp'] = data['temp'].replace('N/D', np.nan).str.replace(',', '.').astype(float)
-        else:
-            data['temp'] = data['temp'].replace('N/D', np.nan).astype(float)
+def plot_figure(files, ref_file=None, show_points=False):
+    """
+    Plot temperature data with optional reference file.
 
-        # Extrakce sloupců 'date' a 'time'
-        date = data['date'].iloc[0]  # Předpoklad, že všechny řádky mají stejné datum
-        time_str = data['time']
+    Parameters:
+        files (list): List of file paths.
+        ref_file (str): Reference file name (without extension).
+        show_points (bool): Whether to display actual data points on the graph.
 
-        # Porovnání referenčního data s datem aktuálního souboru, pokud je poskytováno
-        if reference_date and date != reference_date:
-            proceed = input(f"Varování: Zjištěna nesrovnalost data. Očekáváno {reference_date}, nalezeno {date}. Pokračovat? (ano/a/yes/y): ")
-            if proceed.lower() not in ['ano', 'a', 'yes', 'y']:
-                print("Skript ukončen.")
-                return None, None, None, None, None
-
-        # Konverze času na pandas datetime bez data
-        time_seconds = pd.to_datetime(time_str, format='%H:%M:%S')
-
-        # Debug: Výpis skutečných časových údajů
-        # print("Actual time values:", time_seconds.tolist())
-
-        # Extrakce teplotních hodnot
-        temperature = data['temp']
-
-        # Interpolační funkce
-        interpolation_function = interp1d(time_seconds.astype(np.int64) / 10**9, temperature, kind='linear', fill_value="extrapolate")
-
-        return time_seconds.dt.time, temperature, interpolation_function, date, data
-
-    except Exception as e:
-        print(f"Chyba při načítání a interpolaci dat ze souboru {file_path}: {e}")
-        return None, None, None, None, None
-
-def plot_data(files, show_points=False):
-    reference_date = None
+    Returns:
+        None
+    """
     fig = go.Figure()
+    global_min_time = calculate_global_min_time(files)
 
-    for file in files:
-        file_path = f"./data_parsed/{file}.csv"
-        time_seconds, temperature, interpolation_function, date, data = load_and_interpolate(file_path, reference_date)
-        
-        if time_seconds is None:
-            continue
-        
-        # Nastavení referenčního data, pokud se jedná o první soubor
-        if reference_date is None:
-            reference_date = date
-        
-        # Generování plného rozsahu času v datetime pro graf (bez data)
-        min_time, max_time = pd.to_datetime(time_seconds, format='%H:%M:%S').min(), pd.to_datetime(time_seconds, format='%H:%M:%S').max()
-        full_time_range = pd.date_range(start=f"2000-01-01 {min_time}", end=f"2000-01-01 {max_time}", freq='s').time
+    for file_path in files:
+        try:
+            # Load and process file
+            data = load_file(file_path)
+            interpolation_function = interpolate_data(data)
+            time_seconds = data['time']
+            temperature = data['temp']
+            full_time_range = pd.date_range(start=global_min_time, end=time_seconds.max(), freq='s')
 
-        # Seřazení full_time_range
-        full_time_range = sorted(full_time_range)
+            # Debug: Check time and temperature ranges
+            #print(f"File: {file_path}")
+            #print(f"Time range: {time_seconds.min()} - {time_seconds.max()}")
+            #print(f"Temperature stats: {temperature.describe()}")
 
-        # Pokračování s interpolací
-        interpolated_temp = interpolation_function(pd.to_datetime(full_time_range, format='%H:%M:%S').astype(np.int64) / 10**9)
-        
-        # Extrakce názvu souboru bez cesty a přípony
-        file_name = file
-        
-        # Kontrola, zda se jedná o soubor "klarka" a přidání tolerančního rozmezí
-        if 'klarka' in file.lower():
-            fig.add_trace(go.Scatter(
-                x=full_time_range, y=interpolated_temp, mode='lines',
-                name=f'Klárka ({date})', line=dict(color='purple')
-            ))
-            fig.add_trace(go.Scatter(
-                x=full_time_range, y=interpolated_temp + 0.5, mode='lines',
-                name=f'+0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
-            ))
-            fig.add_trace(go.Scatter(
-                x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
-                name=f'-0.5°C Klárka ({date})', line=dict(dash='dash', color='purple')
-            ))
+            # Interpolate temperature over the full time range
+            interpolated_temp = interpolation_function(
+                full_time_range.astype(np.int64) // 10**9
+            )
 
-            # Přidání bodů pro skutečná měření, pokud je show_points True
-            if show_points:
+            # Extract file name without extension
+            file_name = os.path.basename(file_path).replace('.csv', '')
+
+            if ref_file and ref_file in file_path:
+                # Plot reference file with tolerance bands
+                fig.add_trace(go.Scatter(x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name}'))
                 fig.add_trace(go.Scatter(
-                    x=time_seconds, y=temperature, mode='markers', name=f'Měření ({date})',
-                    marker=dict(color='red', size=8, symbol='circle')
+                    x=full_time_range, y=interpolated_temp + 0.5, mode='lines',
+                    name=f'+0.5°C {file_name}', line=dict(dash='dash', color='purple')
                 ))
-
-            # Přidání grafové stopy pro DoorOpen, pokud sloupec existuje
-            if 'door_open' in data.columns:
-                door_open = data["door_open"].astype(int)
+                fig.add_trace(go.Scatter(
+                    x=full_time_range, y=interpolated_temp - 0.5, mode='lines',
+                    name=f'-0.5°C {file_name}', line=dict(dash='dash', color='purple')
+                ))
             else:
-                door_open = -1 * np.ones(len(time_seconds))
-            fig.add_trace(go.Scatter(
-                x=time_seconds, y=door_open, mode='lines',
-                name='DoorOpen', line=dict(color='red', dash='dot')
-            ))
-        else:
-            # Vykreslení teplotních dat
-            fig.add_trace(go.Scatter(
-                x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name} ({date})'
-            ))
-            
-            # Přidání bodů pro skutečná měření, pokud je show_points True
+                # Plot regular file data
+                fig.add_trace(go.Scatter(x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name}'))
+
             if show_points:
+                # Plot actual data points
                 fig.add_trace(go.Scatter(
-                    x=time_seconds, y=temperature, mode='markers', name=f'Měření ({date})',
+                    x=time_seconds, y=temperature, mode='markers', name=f'Měření {file_name}',
                     marker=dict(color='red', size=8, symbol='circle')
                 ))
-    
-    # Přidání textu o průměrných intervalech do layoutu grafu
+
+            try:
+                data = pd.read_csv(file_path, delimiter=',')  # Reload for door_open
+                if 'door_open' in data.columns:
+                    door_open = data['door_open'].astype(int)
+                    fig.add_trace(go.Scatter(
+                        x=time_seconds, 
+                        y=door_open, 
+                        mode='lines', 
+                        name=f'Stav dveří ({file_name})', 
+                        line=dict(color='red', dash='dot')
+                    ))
+            except Exception as e:
+                print(f"Chyba při zpracování door_open pro soubor {file_name}: {e}")
+
+        except Exception as e:
+            print(f"Error processing file {file_path}: {e}")
+
+    # Configure the graph layout
     fig.update_layout(
         title='Teplotní data',
         xaxis_title='Čas',
@@ -137,14 +178,25 @@ def plot_data(files, show_points=False):
         hovermode='x unified',
         xaxis=dict(tickformat='%H:%M:%S'),
     )
-    if __name__ == "__main__":
-        fig.show()
-    else:
-        return fig
+    return fig
+
 
 def main():
-    # Hlavní logika pro testování
-    plot_data(files, show_points)
+    """
+    Main function to execute the script.
+    """
+    files = input("Enter file names (comma-separated, without extensions): ").split(',')
+    ref_file = input("Enter reference file (without extension): ").strip()
+    show_points = input("Show points on the graph? (yes/y to enable, default: no): ").lower() in ['yes', 'y']
+
+    try:
+        # Validate files and plot data
+        file_paths = validate_files(files)
+        fig = plot_figure(file_paths, ref_file=ref_file, show_points=show_points)
+        fig.show()
+    except Exception as e:
+        print(f"Error: {e}")
+
 
 if __name__ == "__main__":
     main()
