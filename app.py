@@ -1,31 +1,35 @@
-from flask import Flask, render_template, request, jsonify
-from python.ploter import plot_data
-from python.least_squares import plot_calibrated_data
+from flask import Flask, render_template, request
+from modules.ploter import plot_figure, validate_files
 import os
 
 app = Flask(__name__)
 
-# Endpoint pro hlavní stránku
-@app.route('/')
+# Nastavení adresáře pro CSV soubory
+DATA_DIR = './data_parsed/'
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    files = os.listdir('./data_parsed')  # Získání seznamu dostupných souborů
-    return render_template('index.html', files=files)
+    if request.method == 'POST':
+        # Načteme názvy souborů a parametry z formuláře
+        files = request.form['files'].split(',')
+        files = [file.strip() for file in files]
+        ref_file = request.form['ref_file'].strip()
+        show_points = 'show_points' in request.form
 
-# Endpoint pro zpracování výběru souborů a generování grafů
-@app.route('/generate_graphs', methods=['POST'])
-def generate_graphs():
-    selected_files = request.json.get('selected_files', [])
-    if not selected_files:
-        return jsonify({'error': 'Žádné soubory nebyly vybrány.'}), 400
+        # Zkontrolujeme, jestli je referenční soubor v seznamu
+        if ref_file and ref_file not in files:
+            return render_template('index.html', error="Reference file is not in the provided list of files.")
 
-    # Generování grafů
-    try:
-        plot_data(selected_files)  # První graf
-        plot_calibrated_data(selected_files[0], selected_files[1])  # Druhý graf (například pro kalibraci)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Generování grafu pomocí funkce z modulu ploter
+        file_paths = validate_files(files)
+        fig = plot_figure(file_paths, ref_file, show_points)
+        fig_html = fig.to_html(full_html=False)
 
-    return jsonify({'message': 'Grafy byly úspěšně vygenerovány.'})
+        # Zobrazení generovaného grafu
+        return render_template('index.html', plot=fig_html)
+
+    return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
