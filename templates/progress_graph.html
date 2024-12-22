@@ -36,5 +36,10 @@
         <h2>Generated Plot:</h2>
         <div>{{ plot | safe }}</div>
     {% endif %}
+
+    {% if intervals %}
+        <h2>Average Sampling Intervals</h2>
+        <div>{{ intervals|safe }}</div> 
+    {% endif %}
 </body>
 </html>

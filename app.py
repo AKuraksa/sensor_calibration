@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from modules.ploter import plot_figure
+from modules.avg_senzor_time import process_files
 from modules.tools import validate_files
-import os
 
 app = Flask(__name__)
 
@@ -26,12 +26,22 @@ def progress_graph():
             return render_template('progress_graph.html', error="Reference file is not in the provided list of files.")
 
         # Generování grafu pomocí funkce z modulu ploter
-        file_paths = validate_files(files)
-        fig = plot_figure(file_paths, ref_file, show_points)
-        fig_html = fig.to_html(full_html=False)
+        try:
+            file_paths = validate_files(files)
+            fig = plot_figure(file_paths, ref_file, show_points)
+            fig_html = fig.to_html(full_html=False)
+        except Exception as e:
+            return render_template('progress_graph.html', error=str(e))
 
-        # Zobrazení generovaného grafu
-        return render_template('progress_graph.html', plot=fig_html)
+        # Získáme průměrné intervaly snímání senzorů
+        try:
+            intervals = process_files(files)
+            intervals_html = "<ul>" + "".join([f"<li>{file}: {interval}</li>" for file, interval in intervals.items()]) + "</ul>"
+        except Exception as e:
+            intervals_html = f"Error calculating intervals: {str(e)}"
+
+        # Zobrazení generovaného grafu a průměrných intervalů
+        return render_template('progress_graph.html', plot=fig_html, intervals=intervals_html)
 
     return render_template('progress_graph.html')
 

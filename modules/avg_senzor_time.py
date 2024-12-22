@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import os
-from tools import validate_files
 
 def load_file(file_path):
     """
@@ -13,7 +12,9 @@ def load_file(file_path):
     Returns:
         pd.DataFrame: DataFrame containing the data.
     """
-    return pd.read_csv(file_path, delimiter=',', parse_dates=[['date', 'time']])
+    data = pd.read_csv(file_path, delimiter=',')
+    data['date_time'] = pd.to_datetime(data['date'] + ' ' + data['time'])
+    return data
 
 def calculate_average_interval(data):
     """
@@ -49,10 +50,17 @@ def format_interval(seconds):
         hours = seconds / 3600
         return f"{hours:.2f} hours"
 
-def main():
-    files = input("Enter file names (comma-separated, without extensions): ").split(',')
-    files = [file.strip() for file in files]
+def process_files(files):
+    """
+    Process multiple CSV files and return the average sampling intervals.
 
+    Parameters:
+        files (list): List of file names without extensions.
+
+    Returns:
+        dict: Dictionary with file names as keys and formatted intervals as values.
+    """
+    intervals = {}
     try:
         file_paths = validate_files(files)
         for file_path in file_paths:
@@ -60,11 +68,22 @@ def main():
                 data = load_file(file_path)
                 average_interval = calculate_average_interval(data)
                 formatted_interval = format_interval(average_interval)
-                print(f"{os.path.basename(file_path)}: Average sampling interval: {formatted_interval}")
+                intervals[os.path.basename(file_path)] = formatted_interval
             except Exception as e:
                 print(f"Error processing file {file_path}: {e}")
     except Exception as e:
         print(f"Error: {e}")
+    return intervals
+
+def main():
+    files = input("Enter file names (comma-separated, without extensions): ").split(',')
+    files = [file.strip() for file in files]
+    intervals = process_files(files)
+    for file, interval in intervals.items():
+        print(f"{file}: Average sampling interval: {interval}")
 
 if __name__ == "__main__":
+    from tools import validate_files
     main()
+else:
+    from modules.tools import validate_files

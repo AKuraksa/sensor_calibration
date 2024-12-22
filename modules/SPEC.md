@@ -107,3 +107,7 @@ Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytv�
 ### Autorství
 
 Tento skript byl vytvořen a upraven jako uživatelský nástroj s přispěním asistenta OpenAI a Microsoft Copilot.
+
+## tools.py
+
+Knihovna repetitivních kódů

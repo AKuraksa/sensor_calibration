@@ -3,7 +3,6 @@ import numpy as np
 from scipy.interpolate import interp1d
 import plotly.graph_objects as go
 import os
-from tools import validate_files
 
 def load_file(file_path):
     """
@@ -190,4 +189,7 @@ def main():
 
 
 if __name__ == "__main__":
+    from tools import validate_files
     main()
+else:
+    from modules.tools import validate_files
