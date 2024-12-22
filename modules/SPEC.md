@@ -69,8 +69,8 @@ Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytv�
 
 ### Jak program pracuje se souborem
 
-1. **Načtení souboru:**Program otevře CSV soubor ze složky `data_parsed` podle zadaného názvu.
-2. **Ověření obsahu:**Program kontroluje, zda soubor obsahuje požadované sloupce (`time`, `temp`). Pokud některý chybí, zobrazí varování a přejde na další soubor.
+1. **Načtení souboru:** Program otevře CSV soubor ze složky `data_parsed` podle zadaného názvu.
+2. **Ověření obsahu:** Program kontroluje, zda soubor obsahuje požadované sloupce (`time`, `temp`). Pokud některý chybí, zobrazí varování a přejde na další soubor.
 3. **Předzpracování dat:**
 
    - Neplatné hodnoty teploty (`N/D`) jsou nahrazeny `NaN`.
