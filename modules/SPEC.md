@@ -25,7 +25,6 @@ Autor: OpenAI ChatGPT
 
 ## ploter.py
 
-
 Tento skript je určen k načítání, interpolaci dat ze souborů CSV a k vytváření interaktivních grafů teplot pomocí knihovny **Plotly**. Program umožňuje porovnání dat ze senzorů a zahrnuje specifickou podporu pro referenční senzor, u kterého se zobrazí tolerance ±0,5°C.
 
 ---

@@ -18,7 +18,7 @@ def validate_files(files):
     paths = [f"./data_parsed/{file.strip()}.csv" for file in files]
     for path in paths:
         if not os.path.exists(path):
-            raise FileNotFoundError(f"Soubor {path} neexistuje.")
+            raise FileNotFoundError(f"File {path} not exist.")
     # Debug: Print validated file paths
     # print(f"Validated file paths: {paths}")
     return paths
@@ -36,7 +36,7 @@ def load_file(file_path):
     """
     data = pd.read_csv(file_path, delimiter=',')
     if 'date' not in data.columns or 'temp' not in data.columns or 'time' not in data.columns:
-        raise KeyError(f"Soubor {file_path} neobsahuje požadované sloupce.")
+        raise KeyError(f"'date', 'temp or 'time' {file_path} not exist.")
 
     # Handle missing data and decimal separators
     if data['temp'].dtype == object:  # Check if 'temp' contains strings
@@ -165,16 +165,16 @@ def plot_figure(files, ref_file=None, show_points=False):
                         line=dict(color='red', dash='dot')
                     ))
             except Exception as e:
-                print(f"Chyba při zpracování door_open pro soubor {file_name}: {e}")
+                print(f"Error: door_open {file_name}: {e}")
 
         except Exception as e:
             print(f"Error processing file {file_path}: {e}")
 
     # Configure the graph layout
     fig.update_layout(
-        title='Teplotní data',
-        xaxis_title='Čas',
-        yaxis_title='Teplota (°C)',
+        title='Temp data',
+        xaxis_title='Time',
+        yaxis_title='Temperature (°C)',
         hovermode='x unified',
         xaxis=dict(tickformat='%H:%M:%S'),
     )
@@ -186,8 +186,18 @@ def main():
     Main function to execute the script.
     """
     files = input("Enter file names (comma-separated, without extensions): ").split(',')
+    files = [file.strip() for file in files]
     ref_file = input("Enter reference file (without extension): ").strip()
     show_points = input("Show points on the graph? (yes/y to enable, default: no): ").lower() in ['yes', 'y']
+
+    if ref_file and ref_file not in files:
+        print(f"Error: Reference file '{ref_file}' is not in the list of provided files: {', '.join(files)}.")
+        proceed = input("Do you want to continue without a reference file? (yes/y to continue, default: no): ").strip().lower()
+        if proceed not in ['yes', 'y']:
+            print("Exiting program.")
+            return
+        else:
+            ref_file = None 
 
     try:
         # Validate files and plot data
