@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plot Temperature Data</title>
+</head>
+<body>
+    <h1>Plot Temperature Data</h1>
+
+    <form method="POST">
+        <label for="files">Enter file names (comma-separated, without extensions):</label>
+        <input type="text" id="files" name="files" required>
+        <br><br>
+
+        <label for="ref_file">Enter reference file (without extension):</label>
+        <input type="text" id="ref_file" name="ref_file">
+        <br><br>
+
+        <label for="show_points">Show points on the graph?</label>
+        <input type="checkbox" id="show_points" name="show_points">
+        <br><br>
+
+        <input type="submit" value="Generate Plot">
+    </form>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    {% if plot %}
+        <h2>Generated Plot:</h2>
+        <div>{{ plot | safe }}</div>
+    {% endif %}
+</body>
+</html>

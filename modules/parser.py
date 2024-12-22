@@ -1,27 +1,6 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-files = ["bile-28", "co-15", "klarka", "wifi-69"]
-folder = "2024-12-10"
-
-"""
-Tento skript slouží k vyčištění a zpracování surových dat ze souboru CSV. 
-
-Funkce:
-- Načítá data ze složky `data_raw` podle zadaného názvu souboru.
-- Zpracovává sloupec `payload`, který obsahuje data ve formátu JSON, a extrahuje potřebné informace:
-  - Hodnoty CO2, vlhkosti a teploty.
-- Pokud je záznam neplatný nebo chybí důležité informace, je odstraněn.
-- Rozděluje časový údaj do samostatných sloupců `date` (datum) a `time` (čas).
-- Upravená data jsou uložena do nové složky `data_parsed` se stejným názvem souboru.
-
-Statistiky:
-- Na konci zpracování skript zobrazí, kolik záznamů bylo úspěšně zpracováno a kolik bylo odstraněno.
-
-Použití:
-- Upravte proměnnou `file`, aby odpovídala názvu vašeho souboru bez složky a přípony.
-- Spusťte skript pro vyčištění a uložení dat.
-
-Autor: OpenAI ChatGPT
-"""
+files = ["co_15", "klarka", "wifi69"]
+folder = "2024-12-19"
 
 import csv
 import json
