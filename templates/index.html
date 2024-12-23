@@ -7,8 +7,9 @@
 </head>
 <body>
     <nav>
-        <a href="/">Home</a>
-        <a href="/progress_graph">Progress Graph</a>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
+        <a href="{{ url_for('least_squares') }}">Least squares</a>
     </nav>
     <p>Zde se bude vytvářet webové analytické prostředí</p>
 </body>

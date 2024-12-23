@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, redirect, url_for
 from modules.ploter import plot_figure
 from modules.avg_senzor_time import process_files
+from modules.least_squares import plot_calibrated_data
 
 app = Flask(__name__)
 
@@ -42,6 +43,33 @@ def progress_graph():
         return render_template('progress_graph.html', plot=fig_html, intervals=intervals_html)
 
     return render_template('progress_graph.html')
+
+
+# New route for least squares calibration graph
+@app.route('/least_squares', methods=['GET', 'POST'])
+def least_squares():
+    if request.method == 'POST':
+        # Načteme názvy souborů a parametry z formuláře
+        sensor_1 = request.form['sensor_1']
+        sensor_2 = request.form['sensor_2']
+        global_time_range = request.form.get('global_time_range', None)
+        highlight_intervals = request.form.get('highlight_intervals', None)
+
+        try:
+            fig = plot_calibrated_data(f"./data_parsed/{sensor_1}.csv", f"./data_parsed/{sensor_2}.csv", global_time_range, highlight_intervals)
+
+            # Check if the plot is None
+            if fig is None:
+                return render_template('least_squares.html', error="Chyba při vytváření grafu.")
+            
+            fig_html = fig.to_html(full_html=False)
+            
+        except Exception as e:
+            return render_template('least_squares.html', error=f"Chyba: {str(e)}")
+
+        return render_template('least_squares.html', plot=fig_html)
+
+    return render_template('least_squares.html')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Least Squares Calibration</title>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
+        <a href="{{ url_for('least_squares') }}">Least squares</a>
+    </nav>
+    <h1>Least Squares Calibration Plot</h1>
+    <form action="/least_squares" method="POST">
+        <label for="sensor_1">Sensor 1 (CSV):</label>
+        <input type="text" name="sensor_1" id="sensor_1" required><br><br>
+        
+        <label for="sensor_2">Sensor 2 (CSV):</label>
+        <input type="text" name="sensor_2" id="sensor_2" required><br><br>
+
+        <label for="global_time_range">Global Time Range:</label>
+        <input type="text" name="global_time_range" placeholder="HH:MM:SS-HH:MM:SS"><br><br>
+
+        <label for="highlight_intervals">Highlight Intervals:</label>
+        <input type="text" name="highlight_intervals" placeholder="HH:MM:SS-HH:MM:SS"><br><br>
+
+        <button type="submit">Generate Calibration Plot</button>
+    </form>
+
+    {% if plot %}
+        <h2>Calibration Plot</h2>
+        <div>{{ plot|safe }}</div>
+    {% endif %}
+
+    {% if error %}
+        <p style="color: red;">Error: {{ error }}</p>
+    {% endif %}
+</body>
+</html>
