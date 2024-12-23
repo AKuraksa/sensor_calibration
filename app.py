@@ -4,9 +4,16 @@ from modules.avg_senzor_time import process_files
 from modules.least_squares import plot_calibrated_data
 
 app = Flask(__name__)
+app.secret_key = 'supersecretkey'
 
 # Nastavení adresáře pro CSV soubory
 DATA_DIR = './data_parsed/'
+
+@app.context_processor
+def inject_notes():
+    hostname = request.host
+    notes = session.get('notes', {}).get(hostname, [])
+    return dict(notes=notes)
 
 @app.route('/')
 def index():
@@ -45,7 +52,6 @@ def progress_graph():
     return render_template('progress_graph.html')
 
 
-# New route for least squares calibration graph
 @app.route('/least_squares', methods=['GET', 'POST'])
 def least_squares():
     if request.method == 'POST':
@@ -71,6 +77,19 @@ def least_squares():
 
     return render_template('least_squares.html')
 
+# Adding notepad functionality
+@app.route('/notepad', methods=['POST'])
+def notepad():
+    if 'notes' not in session:
+        session['notes'] = {}
+
+    hostname = request.host
+    note = request.form['note']
+    if hostname not in session['notes']:
+        session['notes'][hostname] = []
+    session['notes'][hostname].append(note)
+    session.modified = True
+    return redirect(request.referrer)
 
 if __name__ == '__main__':
     app.run(debug=False)

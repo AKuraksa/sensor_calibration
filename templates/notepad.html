@@ -1,21 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>My App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    {% block content %}
-    <nav>
-        <a href="{{ url_for('index') }}">Home</a>
-        <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
-        <a href="{{ url_for('least_squares') }}">Least squares</a>
-    </nav>
-    <p>Zde se bude vytvářet webové analytické prostředí</p>
-
-    {% endblock %}
+    {% block content %}{% endblock %}
     
     <!-- Floating Button -->
     <button id="notepad-toggle" class="floating-button">📝</button>
