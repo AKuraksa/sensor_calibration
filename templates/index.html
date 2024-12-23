@@ -1,38 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    {% block content %}
-    <nav>
-        <a href="{{ url_for('index') }}">Home</a>
-        <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
-        <a href="{{ url_for('least_squares') }}">Least squares</a>
-    </nav>
-    <p>Zde se bude vytvářet webové analytické prostředí</p>
+{% extends "template.html" %}
 
-    {% endblock %}
-    
-    <!-- Floating Button -->
-    <button id="notepad-toggle" class="floating-button">📝</button>
+{% block title %}Home - My App{% endblock %}
 
-    <!-- Notepad -->
-    <div id="notepad" class="notepad">
-        <form method="post" action="{{ url_for('notepad') }}">
-            <textarea name="note" placeholder="Write your note here..."></textarea>
-            <button type="submit">Save Note</button>
-        </form>
-        <ul id="notes-list">
-            {% for note in notes %}
-                <li>{{ note }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
-</body>
-</html>
+{% block content %}
+<h2>Vítej ve webové aplikaci, na které se teprve pracuje!</h2>
+<p>Toto je domácí stránka.</p>
+<p>Zde se bude vytvářet webové analytické prostředí</p>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}My App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Senzor calibration</h1>
+    </header>
+
+    <nav>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
+            <a href="{{ url_for('least_squares') }}">Least squares</a>
+        </nav>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Floating Button -->
+    <button id="notepad-toggle" class="floating-button">📝</button>
+
+    <!-- Notepad -->
+    <div id="notepad" class="notepad">
+        <form method="post" action="{{ url_for('notepad') }}">
+            <textarea name="note" placeholder="Write your note here..."></textarea>
+            <button type="submit">Save Note</button>
+        </form>
+        <ul id="notes-list">
+            {% for note in notes %}
+                <li>{{ note }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

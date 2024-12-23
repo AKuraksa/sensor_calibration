@@ -47,3 +47,7 @@ body {
 .notepad li {
     margin-bottom: 5px;
 }
+
+.graph {
+    height: 100vh;
+}
