@@ -1,24 +1,26 @@
 {% extends "template.html" %}
 
-{% block title %}Plot Temperature Data - My App{% endblock %}
+{% block title %}Plot Temperature Data{% endblock %}
+{% block app %}Plot Temperature Data{% endblock %}
 
 {% block content %}
-<h2>Plot Temperature Data</h2>
-
     <form method="POST">
         <label for="files">Enter file names (comma-separated, without extensions):</label>
         <input type="text" id="files" name="files" required>
-        <br><br>
+        <br>
 
         <label for="ref_file">Enter reference file (without extension):</label>
         <input type="text" id="ref_file" name="ref_file">
-        <br><br>
+        <br>
 
         <label for="show_points">Show points on the graph?</label>
         <input type="checkbox" id="show_points" name="show_points">
-        <br><br>
+        <br>
 
-        <input type="submit" value="Generate Plot">
+        <button class="btn matrix" type="submit">
+            <span>Analyze</span>
+            <div class="code-rain"></div>
+        </button>
     </form>
 
     {% if error %}

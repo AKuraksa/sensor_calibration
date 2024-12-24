@@ -1,23 +1,30 @@
 {% extends "template.html" %}
 
-{% block title %}Least Squares Calibration - My App{% endblock %}
+{% block title %}Least Squares Calibration{% endblock %}
+{% block app %}Least Squares Calibration{% endblock %}
 
 {% block content %}
-    <h2>Least Squares Calibration Plot</h2>
     <form action="/least_squares" method="POST">
         <label for="sensor_1">Sensor 1 (CSV):</label>
-        <input type="text" name="sensor_1" id="sensor_1" required><br><br>
+        <input type="text" name="sensor_1" id="sensor_1" required>
+        <br>
         
         <label for="sensor_2">Sensor 2 (CSV):</label>
-        <input type="text" name="sensor_2" id="sensor_2" required><br><br>
+        <input type="text" name="sensor_2" id="sensor_2" required>
+        <br>
 
         <label for="global_time_range">Global Time Range:</label>
-        <input type="text" name="global_time_range" placeholder="HH:MM:SS-HH:MM:SS"><br><br>
+        <input type="text" name="global_time_range" placeholder="HH:MM:SS-HH:MM:SS">
+        <br>
 
         <label for="highlight_intervals">Highlight Intervals:</label>
-        <input type="text" name="highlight_intervals" placeholder="HH:MM:SS-HH:MM:SS"><br><br>
+        <input type="text" name="highlight_intervals" placeholder="HH:MM:SS-HH:MM:SS">
+        <br>
 
-        <button type="submit">Generate Calibration Plot</button>
+        <button class="btn matrix" type="submit">
+            <span>Analyze</span>
+            <div class="code-rain"></div>
+        </button>
     </form>
     
     {% if plot %}

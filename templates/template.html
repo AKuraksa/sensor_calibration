@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My App{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>{% block title %}Sensor Analyzer{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='pic/icon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notepad.css') }}">
 </head>
 <body>
     <header>
-        <h1>Senzor calibration</h1>
+        <h1>Sensor Analyzer - {% block app %}Web page{% endblock %}</h1>
     </header>
 
     <nav>
-        <nav>
-            <a href="{{ url_for('index') }}">Home</a>
-            <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
-            <a href="{{ url_for('least_squares') }}">Least squares</a>
-        </nav>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('progress_graph') }}">Progress Graph</a>
+        <a href="{{ url_for('least_squares') }}">Least squares</a>
     </nav>
 
     <main>
@@ -39,6 +39,6 @@
         </ul>
     </div>
 
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notepad.js') }}"></script>
 </body>
 </html>
