@@ -92,47 +92,72 @@ main {
 }
 
 .btn {
-    position: relative;
-    padding: 1.5rem 3rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    background: none;
-    border: none;
-    cursor: pointer;
-    overflow: hidden;
-    transition: all 0.4s ease;
+  position: relative;
+  padding: 1.5rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.matrix {
+  background: #000;
+  border: 2px solid #0f0;
+  color: #0f0;
+}
+
+.code-rain {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 0, 0) 0%,
+    rgba(0, 255, 0, 0.2) 50%,
+    rgba(0, 255, 0, 0) 100%
+  );
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.matrix:hover .code-rain {
+  opacity: 1;
+  animation: rain 1s linear infinite;
+}
+
+@keyframes rain {
+  0% {
+    transform: translateY(-100%);
   }
-  
-  .matrix {
-    background: #000;
-    border: 2px solid #0f0;
-    color: #0f0;
+  100% {
+    transform: translateY(100%);
   }
-  
-  .code-rain {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      180deg,
-      rgba(0, 255, 0, 0) 0%,
-      rgba(0, 255, 0, 0.2) 50%,
-      rgba(0, 255, 0, 0) 100%
-    );
-    opacity: 0;
-    transition: 0.3s;
-  }
-  
-  .matrix:hover .code-rain {
-    opacity: 1;
-    animation: rain 1s linear infinite;
-  }
-  
-  @keyframes rain {
-    0% {
-      transform: translateY(-100%);
-    }
-    100% {
-      transform: translateY(100%);
-    }
-  }
+}
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.dropdown-content label {
+  display: block;
+  padding: 8px;
+}
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+.input-box {
+  width: 200px;
+  padding: 10px;
+}

@@ -2,12 +2,20 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from modules.ploter import plot_figure
 from modules.avg_senzor_time import process_files
 from modules.least_squares import plot_calibrated_data
+import os
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 
 # Nastavení adresáře pro CSV soubory
 DATA_DIR = './data_parsed/'
+
+try:
+    # Získání souborů s příponou .csv a odstranění přípony
+    choice = [os.path.splitext(f)[0] for f in os.listdir(DATA_DIR) if f.endswith('.csv')]
+    print("Files:", choice)  # Zkontrolujte, zda jsou soubory správně načteny
+except FileNotFoundError:
+    choice = []
 
 @app.context_processor
 def inject_notes():
@@ -30,14 +38,14 @@ def progress_graph():
 
         # Zkontrolujeme, jestli je referenční soubor v seznamu
         if ref_file and ref_file not in files:
-            return render_template('progress_graph.html', error="Reference file is not in the provided list of files.")
+            return render_template('progress_graph.html', choice=choice, error="Reference file is not in the provided list of files.")
 
         # Generování grafu pomocí funkce z modulu ploter
         try:
             fig = plot_figure(files, ref_file, show_points)
             fig_html = fig.to_html(full_html=False)
         except Exception as e:
-            return render_template('progress_graph.html', error=str(e))
+            return render_template('progress_graph.html', choice=choice, error=str(e))
 
         # Získáme průměrné intervaly snímání senzorů
         try:
@@ -47,9 +55,9 @@ def progress_graph():
             intervals_html = f"Error calculating intervals: {str(e)}"
 
         # Zobrazení generovaného grafu a průměrných intervalů
-        return render_template('progress_graph.html', plot=fig_html, intervals=intervals_html)
+        return render_template('progress_graph.html', choice=choice, plot=fig_html, intervals=intervals_html)
 
-    return render_template('progress_graph.html')
+    return render_template('progress_graph.html', choice=choice)
 
 
 @app.route('/least_squares', methods=['GET', 'POST'])
@@ -66,16 +74,17 @@ def least_squares():
 
             # Check if the plot is None
             if fig is None:
-                return render_template('least_squares.html', error="Chyba při vytváření grafu.")
+                return render_template('least_squares.html', choice=choice, error="Chyba při vytváření grafu.")
             
             fig_html = fig.to_html(full_html=False)
             
         except Exception as e:
-            return render_template('least_squares.html', error=f"Chyba: {str(e)}")
+            return render_template('least_squares.html', choice=choice, error=f"Chyba: {str(e)}")
 
-        return render_template('least_squares.html', plot=fig_html)
+        
+        return render_template('least_squares.html', choice=choice, plot=fig_html)
 
-    return render_template('least_squares.html')
+    return render_template('least_squares.html', choice=choice)
 
 # Adding notepad functionality
 @app.route('/notepad', methods=['POST'])
@@ -92,4 +101,4 @@ def notepad():
     return redirect(request.referrer)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)

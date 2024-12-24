@@ -4,24 +4,109 @@
 {% block app %}Plot Temperature Data{% endblock %}
 
 {% block content %}
-    <form method="POST">
-        <label for="files">Enter file names (comma-separated, without extensions):</label>
-        <input type="text" id="files" name="files" required>
-        <br>
+<form method="POST">
+    <label for="files">Select files (multiple selections allowed, without extensions):</label>
+    <div class="dropdown">
+        <input type="text" name="files" id="files" class="input-box" placeholder="Vyberte soubor" readonly required>
+        <div class="dropdown-content" id="files_options"></div>
+      </div>
+    <br>
 
-        <label for="ref_file">Enter reference file (without extension):</label>
-        <input type="text" id="ref_file" name="ref_file">
-        <br>
+    <label for="ref_file">Select reference file (from selected files):</label>
+    <select id="ref_file" name="ref_file">
+        <!-- Dynamicky generované soubory pro referenční soubor -->
+    </select>
+    <br>
 
-        <label for="show_points">Show points on the graph?</label>
-        <input type="checkbox" id="show_points" name="show_points">
-        <br>
+    <label for="show_points">Show points on the graph?</label>
+    <input type="checkbox" id="show_points" name="show_points">
+    <br>
 
-        <button class="btn matrix" type="submit">
-            <span>Analyze</span>
-            <div class="code-rain"></div>
-        </button>
-    </form>
+    <button class="btn matrix" type="submit">
+        <span>Analyze</span>
+        <div class="code-rain"></div>
+    </button>
+</form>
+
+<script>
+    // Seznam souborů z Flasku (bez přípon .csv)
+    files = JSON.parse('{{ choice | tojson | safe }}');
+    files = files.slice(1, -1);
+
+    // Funkce pro generování možností pro seznam souborů
+    function generateFileOptions(files) {
+        const sensor1Input = document.getElementById('files');
+        const dropdown = document.getElementById('files_options');
+        const refFileSelect = document.getElementById('ref_file');
+
+        // Generování checkboxů pro výběr souborů
+        files.forEach(file => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'files';
+            checkbox.value = file;
+
+            // Při změně checkboxu se aktualizuje vstupní pole a možnosti pro referenční soubor
+            checkbox.addEventListener('change', function() {
+                updateSensor1Input(); // Aktualizuje hodnotu v inputu
+                updateRefFileOptions(); // Aktualizuje možnosti referenčního souboru
+            });
+
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(file));
+            dropdown.appendChild(label);
+        });
+
+        // Funkce pro aktualizaci inputu s vybranými soubory
+        function updateSensor1Input() {
+            const selectedFiles = Array.from(document.querySelectorAll('#files_options input:checked'))
+                .map(input => input.value); // Získá hodnoty všech zaškrtnutých checkboxů
+            sensor1Input.value = selectedFiles.join(', '); // Zapíše hodnoty oddělené čárkou do inputu
+        }
+
+        // Funkce pro aktualizaci možností referenčního souboru
+        function updateRefFileOptions() {
+            refFileSelect.innerHTML = ''; // Vymažeme aktuální možnosti
+            const selectedFiles = Array.from(document.querySelectorAll('#files_options input:checked'))
+                .map(input => input.value);
+
+            // Přidáme možnosti pro referenční soubor
+            selectedFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                refFileSelect.appendChild(option);
+            });
+
+            // Nastavíme první vybraný soubor jako výchozí referenční soubor
+            if (selectedFiles.length > 0) {
+                refFileSelect.value = selectedFiles[0];
+            }
+        }
+    }
+
+    // Zavoláme funkci pro generování možností pro výběr souborů
+    generateFileOptions(files);
+
+    // Zobrazení dropdown při kliknutí na textové pole
+    document.querySelectorAll('.input-box').forEach(inputBox => {
+        inputBox.addEventListener('click', function(event) {
+            event.stopPropagation();  // Zamezí šíření události (aby dropdown zůstal otevřený)
+            const dropdown = this.nextElementSibling;
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+    });
+
+    // Zavření dropdownu při kliknutí mimo něj
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+                dropdown.style.display = 'none';
+            });
+        }
+    });
+</script>
 
     {% if error %}
         <p style="color: red;">{{ error }}</p>
