@@ -93,8 +93,8 @@ main {
 
 .btn {
   position: relative;
-  padding: 1.5rem 3rem;
-  font-size: 1.1rem;
+  padding: 1rem 2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #fff;
   background: none;
@@ -102,10 +102,11 @@ main {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.4s ease;
+  margin: 25px 0;
 }
 
 .matrix {
-  background: #000;
+  background: #222;
   border: 2px solid #0f0;
   color: #0f0;
 }
@@ -116,7 +117,7 @@ main {
   background: linear-gradient(
     180deg,
     rgba(0, 255, 0, 0) 0%,
-    rgba(0, 255, 0, 0.2) 50%,
+    rgba(0, 255, 0, 0.5) 50%,
     rgba(0, 255, 0, 0) 100%
   );
   opacity: 0;
@@ -160,5 +161,5 @@ main {
 .input-box {
   width: 200px;
   padding: 5px;
-  margin: 20px 0 5px 0;
+  margin-top: 25px;
 }

@@ -4,12 +4,12 @@ sensor_2 = "co_15"
 
 # Celkový časový rozsah (volitelné)
 # global_time_range = ("17:50:00", "19:15:00")
-global_time_range = ()
+global_time_range = ("16:50:00", "19:15:00")
 
 # Intervaly pro zvýraznění (volitelné)
 # highlight_intervals = [ ("18:00:00", "18:05:00"), ("18:15:00", "18:20:00"), ("18:40:00", "19:00:00") ]
 # ("16:50:00", "17:19:00"), ("17:30:00", "17:49:00")
-highlight_intervals = []
+highlight_intervals = [("18:00:00", "18:05:00"), ("18:15:00", "18:20:00"), ("18:40:00", "19:00:00"), ("16:50:00", "17:19:00"), ("17:30:00", "17:49:00")]
 
 import pandas as pd
 import numpy as np
