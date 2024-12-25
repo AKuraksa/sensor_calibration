@@ -1,5 +1,5 @@
 # Názvy vstupních souborů (zadejte seznam názvů bez přípony)
-files = ["co_15", "klarka", "wifi69"]
+files = ["co_15","co_02","co_04", "m_26", "klarka", "wifi69"]
 folder = "2024-12-19"
 
 import csv

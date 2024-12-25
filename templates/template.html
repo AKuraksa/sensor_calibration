@@ -29,24 +29,25 @@
     <!-- Notepad -->
     <div id="notepad" class="notepad">
         <!-- Form for adding a new note -->
-        <form id="add-note-form">
-            <textarea id="note-input" name="note" placeholder="Write your note here..."></textarea>
+        <form method="POST" action="/notepad">
+            <textarea name="note" placeholder="Write your note here..." required></textarea>
             <button type="submit">Save Note</button>
         </form>
-    
-        <!-- Button for deleting selected notes -->
-        <button id="delete-notes-button">Delete Selected Notes</button>
-    
-        <!-- List of notes -->
-        <ul id="notes-list">
-            {% for note in notes %}
+        <!-- Form for deleting selected notes -->
+        <form method="POST" action="/delete_notes">
+            <button type="submit">Delete Selected Notes</button>
+            <ul>
+                {% for note in notes %}
                 <li>
-                    <input type="checkbox" name="notes" value="{{ note }}">
-                    {{ note }}
+                    <label>
+                        <input type="checkbox" name="notes" value="{{ note }}">
+                        {{ note }}
+                    </label>
                 </li>
-            {% endfor %}
-        </ul>
-    </div>    
+                {% endfor %}
+            </ul>
+        </form>
+    </div>
     
 
     <script src="{{ url_for('static', filename='js/notepad.js') }}"></script>

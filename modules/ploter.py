@@ -111,7 +111,7 @@ def plot_figure(files, ref_file=None, show_points=False):
 
             if ref_file and ref_file in file_path:
                 # Plot reference file with tolerance bands
-                fig.add_trace(go.Scatter(x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name}'))
+                fig.add_trace(go.Scatter(x=full_time_range, y=interpolated_temp, mode='lines', name=f'{file_name}' , line=dict(color='purple')))
                 fig.add_trace(go.Scatter(
                     x=full_time_range, y=interpolated_temp + 0.5, mode='lines',
                     name=f'+0.5°C {file_name}', line=dict(dash='dash', color='purple')

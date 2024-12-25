@@ -27,8 +27,8 @@ except FileNotFoundError:
 
 @app.context_processor
 def inject_notes():
-    hostname = request.host
-    notes = session.get('notes', {}).get(hostname, [])
+    """Inject notes into templates."""
+    notes = session.get('notes', [])
     return dict(notes=notes)
 
 @app.route('/')
@@ -96,35 +96,23 @@ def least_squares():
 # Adding notepad functionality
 @app.route('/notepad', methods=['POST'])
 def notepad():
-    if 'notes' not in session:
-        session['notes'] = {}
-
-    hostname = request.host
-    data = request.get_json()
-    note = data.get('note', '')
-
-    if not note.strip():
-        return 'Note cannot be empty!', 400
-
-    if hostname not in session['notes']:
-        session['notes'][hostname] = []
-    session['notes'][hostname].append(note)
-    session.modified = True
-    return '', 204  # Return a "No Content" response
+    """Add a new note."""
+    note = request.form.get('note', '').strip()
+    if note:
+        notes = session.get('notes', [])
+        notes.append(note)
+        session['notes'] = notes
+        session.modified = True
+    return redirect(request.referrer)
 
 @app.route('/delete_notes', methods=['POST'])
 def delete_notes():
-    if 'notes' not in session:
-        session['notes'] = {}
-
-    hostname = request.host
-    if hostname in session['notes']:
-        data = request.get_json()
-        notes_to_delete = data.get('notes', [])
-        session['notes'][hostname] = [note for note in session['notes'][hostname] if note not in notes_to_delete]
-        session.modified = True
-
-    return '', 204  # Return a "No Content" response
+    """Delete selected notes."""
+    notes_to_delete = request.form.getlist('notes')
+    notes = session.get('notes', [])
+    session['notes'] = [note for note in notes if note not in notes_to_delete]
+    session.modified = True
+    return redirect(request.referrer)
 
 if __name__ == '__main__':
     app.run(debug=True)
