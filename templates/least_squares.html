@@ -5,81 +5,92 @@
 
 {% block content %}
 <form action="/least_squares" method="POST">
+  <div class="item">
     <label for="sensor_1">Sensor 1 (CSV):</label>
     <div class="dropdown">
       <input type="text" name="sensor_1" id="sensor_1" class="input-box" placeholder="Vyberte soubor" readonly required>
       <div class="dropdown-content" id="sensor_1_options"></div>
     </div>
-    <br>
+  </div>
 
+  <div class="item">
     <label for="sensor_2">Sensor 2 (CSV):</label>
     <div class="dropdown">
       <input type="text" name="sensor_2" id="sensor_2" class="input-box" placeholder="Vyberte soubor" readonly required>
       <div class="dropdown-content" id="sensor_2_options"></div>
     </div>
-    <br>
+  </div>
 
+  <div class="item">
     <label for="global_time_range">Global Time Range:</label>
     <input type="text" name="global_time_range" class="input-box" placeholder="HH:MM:SS-HH:MM:SS">
-    <br>
+  </div>
 
+  <div class="item">
     <label for="highlight_intervals">Highlight Intervals:</label>
     <input type="text" name="highlight_intervals" class="input-box" placeholder="HH:MM:SS-HH:MM:SS">
-    <br>
+  </div>
 
+  <div class="item">
     <button class="btn matrix" type="submit">
       <span>Analyze</span>
       <div class="code-rain"></div>
     </button>
+  </div>
+
 </form>
 
 <script>
-    // Seznam souborů pro sensor 1 a 2 získaný z Flask serveru
-    files = JSON.parse('{{ choice | tojson | safe }}');
-    files = files.slice(1, -1);
-    
-    // Funkce pro generování checkboxů pro výběr souboru
-    function generateFileOptions(sensorId, files) {
-      const dropdown = document.getElementById(sensorId + "_options");
-      files.forEach(file => {
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="radio" name="${sensorId}" value="${file}" onchange="updateInputField('${sensorId}', this.value)"> ${file}`;
-        dropdown.appendChild(label);
+  // Seznam souborů pro sensor 1 a 2 získaný z Flask serveru
+  files = JSON.parse('{{ choice | tojson | safe }}');
+  files = files.slice(1, -1);
+
+  // Funkce pro generování checkboxů pro výběr souboru
+  function generateFileOptions(sensorId, files) {
+    const dropdown = document.getElementById(sensorId + "_options");
+    files.forEach(file => {
+      const label = document.createElement('label');
+      label.innerHTML = `<input type="radio" name="${sensorId}" value="${file}" onchange="updateInputField('${sensorId}', this.value)"> ${file}`;
+      dropdown.appendChild(label);
+    });
+  }
+
+  // Funkce pro aktualizaci textového pole po výběru souboru
+  function updateInputField(sensorId, value) {
+    document.getElementById(sensorId).value = value;
+  }
+
+  // Generování možností pro oba senzory
+  generateFileOptions('sensor_1', files);
+  generateFileOptions('sensor_2', files);
+
+  // Zavření seznamu po dokončení výběru (kliknutí mimo)
+  document.addEventListener('click', function (event) {
+    if (!event.target.closest('.dropdown')) {
+      document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+        dropdown.style.display = 'none';
       });
     }
+  });
 
-    // Funkce pro aktualizaci textového pole po výběru souboru
-    function updateInputField(sensorId, value) {
-      document.getElementById(sensorId).value = value;
-    }
-
-    // Generování možností pro oba senzory
-    generateFileOptions('sensor_1', files);
-    generateFileOptions('sensor_2', files);
-
-    // Zavření seznamu po dokončení výběru (kliknutí mimo)
-    document.addEventListener('click', function(event) {
-      if (!event.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown-content').forEach(dropdown => {
-          dropdown.style.display = 'none';
-        });
-      }
+  // Zobrazení dropdown při kliknutí na textové pole
+  document.querySelectorAll('.input-box').forEach(inputBox => {
+    inputBox.addEventListener('click', function () {
+      this.nextElementSibling.style.display = 'block';
     });
-
-    // Zobrazení dropdown při kliknutí na textové pole
-    document.querySelectorAll('.input-box').forEach(inputBox => {
-      inputBox.addEventListener('click', function() {
-        this.nextElementSibling.style.display = 'block';
-      });
-    });
+  });
 </script>
-    
-    {% if plot %}
-        <h2>Calibration Plot</h2>
-        <div>{{ plot|safe }}</div>
-    {% endif %}
 
-    {% if error %}
-        <p style="color: red;">Error: {{ error }}</p>
-    {% endif %}
+<div class="item">
+  {% if plot %}
+  <h2>Calibration Plot</h2>
+  <div>{{ plot|safe }}</div>
+  {% endif %}
+</div>
+
+<div class="item">
+  {% if error %}
+  <p style="color: red;">Error: {{ error }}</p>
+  {% endif %}
+</div>
 {% endblock %}

@@ -85,13 +85,18 @@ def least_squares():
             
             fig_html = fig.to_html(full_html=False)
             
+            # Save the generated plot in the session
+            session['last_least_squares_graph'] = fig_html
+
         except Exception as e:
             return render_template('least_squares.html', choice=choice, error=f"Chyba: {str(e)}")
 
         
         return render_template('least_squares.html', choice=choice, plot=fig_html)
 
-    return render_template('least_squares.html', choice=choice)
+    # Fetch the last graph from the session if it exists
+    graph_html = session.get('last_least_squares_graph', None)
+    return render_template('least_squares.html', choice=choice, plot=graph_html)
 
 # Adding notepad functionality
 @app.route('/notepad', methods=['POST'])

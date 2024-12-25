@@ -102,7 +102,6 @@ main {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.4s ease;
-  margin: 25px 0;
 }
 
 .matrix {
@@ -161,5 +160,8 @@ main {
 .input-box {
   width: 200px;
   padding: 5px;
-  margin-top: 25px;
+}
+
+.item {
+  margin: 1rem 0;
 }

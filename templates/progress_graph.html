@@ -5,27 +5,32 @@
 
 {% block content %}
 <form method="POST">
-    <label for="files">Select files (multiple selections allowed, without extensions):</label>
-    <div class="dropdown">
-        <input type="text" name="files" id="files" class="input-box" placeholder="Vyberte soubor" readonly required>
-        <div class="dropdown-content" id="files_options"></div>
-      </div>
-    <br>
+    <div class="item">
+        <label for="files">Select files (multiple selections allowed, without extensions):</label>
+        <div class="dropdown">
+            <input type="text" name="files" id="files" class="input-box" placeholder="Vyberte soubor" readonly required>
+            <div class="dropdown-content" id="files_options"></div>
+        </div>
+    </div>
 
-    <label for="ref_file">Select reference file (from selected files):</label>
-    <select id="ref_file" name="ref_file">
-        <!-- Dynamicky generované soubory pro referenční soubor -->
-    </select>
-    <br>
+    <div class="item">
+        <label for="ref_file">Select reference file (from selected files):</label>
+        <select id="ref_file" name="ref_file">
+            <!-- Dynamicky generované soubory pro referenční soubor -->
+        </select>
+    </div>
 
-    <label for="show_points">Show points on the graph?</label>
-    <input type="checkbox" id="show_points" name="show_points">
-    <br>
+    <div class="item">
+        <label for="show_points">Show points on the graph?</label>
+        <input type="checkbox" id="show_points" name="show_points">
+    </div>
 
-    <button class="btn matrix" type="submit">
-        <span>Analyze</span>
-        <div class="code-rain"></div>
-    </button>
+    <div class="item">
+        <button class="btn matrix" type="submit">
+            <span>Analyze</span>
+            <div class="code-rain"></div>
+        </button>
+    </div>
 </form>
 
 <script>
@@ -48,7 +53,7 @@
             checkbox.value = file;
 
             // Při změně checkboxu se aktualizuje vstupní pole a možnosti pro referenční soubor
-            checkbox.addEventListener('change', function() {
+            checkbox.addEventListener('change', function () {
                 updateFilesInput(); // Aktualizuje hodnotu v inputu
                 updateRefFileOptions(); // Aktualizuje možnosti referenčního souboru
             });
@@ -68,7 +73,7 @@
         // Funkce pro aktualizaci možností referenčního souboru
         function updateRefFileOptions() {
             refFileSelect.innerHTML = ''; // Vymažeme aktuální možnosti
-            
+
             // Přidáme možnost 'none'
             const noneOption = document.createElement('option');
             noneOption.value = '';
@@ -100,7 +105,7 @@
 
     // Zobrazení dropdown při kliknutí na textové pole
     document.querySelectorAll('.input-box').forEach(inputBox => {
-        inputBox.addEventListener('click', function(event) {
+        inputBox.addEventListener('click', function (event) {
             event.stopPropagation();  // Zamezí šíření události (aby dropdown zůstal otevřený)
             const dropdown = this.nextElementSibling;
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -108,7 +113,7 @@
     });
 
     // Zavření dropdownu při kliknutí mimo něj
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         if (!event.target.closest('.dropdown')) {
             document.querySelectorAll('.dropdown-content').forEach(dropdown => {
                 dropdown.style.display = 'none';
@@ -117,17 +122,23 @@
     });
 </script>
 
+<div class="item">
     {% if error %}
-        <p style="color: red;">{{ error }}</p>
+    <p style="color: red;">{{ error }}</p>
     {% endif %}
+</div>
 
+<div class="item">
     {% if plot %}
-        <h2>Generated Plot:</h2>
-        <div>{{ plot | safe }}</div>
+    <h2>Generated Plot:</h2>
+    <div>{{ plot | safe }}</div>
     {% endif %}
+</div>
 
+<div class="item">
     {% if intervals %}
-        <h2>Average Sampling Intervals</h2>
-        <div>{{ intervals|safe }}</div> 
+    <h2>Average Sampling Intervals</h2>
+    <div>{{ intervals|safe }}</div>
     {% endif %}
+</div>
 {% endblock %}
