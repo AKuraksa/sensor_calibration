@@ -3,10 +3,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const notepad = document.getElementById('notepad');
 
     notepadToggle.addEventListener('click', function() {
-        if (notepad.style.left === '0px') {
-            notepad.style.left = '-400px';
+        if (notepad.style.right === '0px') {
+            notepad.style.right = '-100%';
         } else {
-            notepad.style.left = '0px';
+            notepad.style.right = '0px';
         }
     });
 });

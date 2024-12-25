@@ -11,11 +11,12 @@ app.secret_key = 'supersecretkey'
 DATA_DIR = './data_parsed/'
 
 try:
-    # Získání souborů s příponou .csv a odstranění přípony
     choice = [os.path.splitext(f)[0] for f in os.listdir(DATA_DIR) if f.endswith('.csv')]
-    print("Files:", choice)  # Zkontrolujte, zda jsou soubory správně načteny
 except FileNotFoundError:
     choice = []
+
+# Degub choice
+#print("Files:", choice)
 
 @app.context_processor
 def inject_notes():
@@ -98,6 +99,19 @@ def notepad():
         session['notes'][hostname] = []
     session['notes'][hostname].append(note)
     session.modified = True
+    return redirect(request.referrer)
+
+@app.route('/delete_notes', methods=['POST'])
+def delete_notes():
+    if 'notes' not in session:
+        session['notes'] = {}
+
+    hostname = request.host
+    if hostname in session['notes']:
+        notes_to_delete = request.form.getlist('notes')  # Get notes marked for deletion
+        session['notes'][hostname] = [note for note in session['notes'][hostname] if note not in notes_to_delete]
+        session.modified = True
+
     return redirect(request.referrer)
 
 if __name__ == '__main__':

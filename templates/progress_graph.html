@@ -49,7 +49,7 @@
 
             // Při změně checkboxu se aktualizuje vstupní pole a možnosti pro referenční soubor
             checkbox.addEventListener('change', function() {
-                updateSensor1Input(); // Aktualizuje hodnotu v inputu
+                updateFilesInput(); // Aktualizuje hodnotu v inputu
                 updateRefFileOptions(); // Aktualizuje možnosti referenčního souboru
             });
 
@@ -59,7 +59,7 @@
         });
 
         // Funkce pro aktualizaci inputu s vybranými soubory
-        function updateSensor1Input() {
+        function updateFilesInput() {
             const selectedFiles = Array.from(document.querySelectorAll('#files_options input:checked'))
                 .map(input => input.value); // Získá hodnoty všech zaškrtnutých checkboxů
             sensor1Input.value = selectedFiles.join(', '); // Zapíše hodnoty oddělené čárkou do inputu
@@ -68,6 +68,13 @@
         // Funkce pro aktualizaci možností referenčního souboru
         function updateRefFileOptions() {
             refFileSelect.innerHTML = ''; // Vymažeme aktuální možnosti
+            
+            // Přidáme možnost 'none'
+            const noneOption = document.createElement('option');
+            noneOption.value = '';
+            noneOption.textContent = 'none';
+            refFileSelect.appendChild(noneOption);
+
             const selectedFiles = Array.from(document.querySelectorAll('#files_options input:checked'))
                 .map(input => input.value);
 
@@ -79,9 +86,11 @@
                 refFileSelect.appendChild(option);
             });
 
-            // Nastavíme první vybraný soubor jako výchozí referenční soubor
+            // Nastavíme referenční soubor na 'none', pokud nejsou vybrané žádné soubory
             if (selectedFiles.length > 0) {
                 refFileSelect.value = selectedFiles[0];
+            } else {
+                refFileSelect.value = ''; // Nastavíme 'none'
             }
         }
     }
