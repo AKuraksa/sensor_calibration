@@ -1,5 +1,6 @@
 venv/
 data_parsed/*.csv
+flask_sessions/
 
 # Standart
 # Byte-compiled / optimized / DLL files

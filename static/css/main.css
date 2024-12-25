@@ -159,5 +159,6 @@ main {
 }
 .input-box {
   width: 200px;
-  padding: 10px;
+  padding: 5px;
+  margin: 20px 0 5px 0;
 }
